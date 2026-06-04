@@ -1,0 +1,21 @@
+# Backend
+hms/target/
+
+# Frontend
+hms-frontend/node_modules/
+hms-frontend/dist/
+
+# STS / Eclipse
+.project
+.classpath
+.settings/
+
+# Logs
+*.log
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
