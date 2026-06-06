@@ -43,7 +43,7 @@ const CSS = `
     background: var(--sb-bg);
     border-right: 1px solid var(--sb-border);
     display: flex; flex-direction: column;
-    height: 100vh; position: fixed; left: 0; top: 52px; z-index: 200;
+    height: 100vh; position: fixed; left: 0; top: 0; z-index: 300;
     transition: width 0.25s ease, background 0.25s ease;
     font-family: 'DM Sans', sans-serif;
   }
@@ -51,7 +51,8 @@ const CSS = `
 
   /* ── Brand ── */
   .sidebar-brand {
-    padding: 20px 16px 16px;
+    height: 52px;
+    padding: 0 16px;
     display: flex; align-items: center; gap: 12px;
     border-bottom: 1px solid var(--sb-border);
     flex-shrink: 0;
@@ -69,11 +70,11 @@ const CSS = `
 
   /* ── Toggle button ── */
   .sidebar-toggle {
-    position: absolute; right: -12px; top: 26px;
+    position: absolute; right: -13px; top: 14px;
     width: 24px; height: 24px; border-radius: 50%;
     background: var(--sb-toggle-bg); border: 1.5px solid var(--sb-border);
     cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-size: 10px; color: var(--sb-text-muted); transition: all 0.15s; z-index: 10;
+    font-size: 10px; color: var(--sb-text-muted); transition: all 0.15s; z-index: 400;
   }
   .sidebar-toggle:hover { background: #059669; color: #fff; border-color: #059669; }
 

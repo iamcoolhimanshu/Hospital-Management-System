@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import { useTheme } from "../../hooks/useTheme";
+import NexusAssistant from "../nexus/NexusAssistant";
 
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -43,6 +44,9 @@ export default function AppLayout() {
       }}>
         <Outlet />
       </main>
+
+      {/* ── Nexus AI Assistant (floating) ── */}
+      <NexusAssistant />
     </div>
   );
 }

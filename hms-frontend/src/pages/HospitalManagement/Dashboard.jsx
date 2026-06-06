@@ -845,6 +845,14 @@ function DashboardTab() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [liveTime, setLiveTime] = useState(new Date());
+
+  // Live clock
+  useEffect(() => {
+    const t = setInterval(() => setLiveTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
   const loadAll = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     try {
@@ -1450,6 +1458,9 @@ function DashboardTab() {
     );
   }
 
+  const clockStr = liveTime.toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
+  const dateStr  = liveTime.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+
   // Build fake weekly trend from admissions (last 7 days)
   const weeklyTrend = Array.from({length:7},(_,i)=>{
     const d = new Date(); d.setDate(d.getDate()-6+i);
@@ -1475,6 +1486,10 @@ function DashboardTab() {
           </div>
         </div>
         <div className="db2-hero-right">
+          <div style={{textAlign:"right"}}>
+            <div className="db2-clock">{clockStr}</div>
+            <div className="db2-date" style={{marginTop:4}}>{dateStr}</div>
+          </div>
           <button className={`db2-refresh-btn${refreshing?" spinning":""}`} onClick={()=>loadAll(true)}>
             <span>↻</span> {refreshing?"Updating…":"Refresh"}
           </button>
@@ -2019,7 +2034,7 @@ function DashboardTab() {
             🏥 <strong style={{color:"#64748B"}}>Vantoor Hospital MedCity</strong> — Dashboard auto-refreshes every 60 seconds
           </div>
           <div style={{fontSize:11,color:"#334155",fontFamily:"'JetBrains Mono',monospace"}}>
-            Last updated: {new Date().toLocaleTimeString("en-IN")}
+            Last updated: {liveTime.toLocaleTimeString("en-IN")}
           </div>
         </div>
         <div style={{marginTop:12,display:"flex",gap:16,flexWrap:"wrap"}}>

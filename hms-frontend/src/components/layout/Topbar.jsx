@@ -37,7 +37,7 @@ const CSS = `
     display: flex; align-items: center;
     background: var(--tb-bg);
     border-bottom: 1px solid var(--tb-border);
-    padding: 0 16px 0 0;
+    padding: 0 16px 0 16px;
     font-family: 'DM Sans', sans-serif;
     box-shadow: 0 1px 8px rgba(0,0,0,0.08);
     transition: background 0.25s, border-color 0.25s;
@@ -328,6 +328,87 @@ const CSS = `
   .pm-field-value { font-size: 14px; font-weight: 600; color: var(--tb-text); }
   .pm-field-empty { color: var(--tb-muted); font-weight: 400; }
 
+  /* ── Edit input ── */
+  .pm-input {
+    width: 100%; padding: 7px 10px;
+    background: var(--tb-input-bg);
+    border: 1.5px solid var(--tb-border);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    color: var(--tb-text);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    box-sizing: border-box;
+  }
+  .pm-input:focus {
+    border-color: #4338ca;
+    box-shadow: 0 0 0 3px rgba(67,56,202,0.12);
+    background: var(--tb-input-focus);
+  }
+  .pm-input::placeholder { color: var(--tb-muted); }
+
+  /* Save / Cancel btns */
+  .pm-save-btn {
+    color: #059669 !important;
+    border-color: rgba(5,150,105,0.3) !important;
+  }
+  .pm-save-btn:hover { background: rgba(5,150,105,0.1) !important; border-color: #059669 !important; }
+  .pm-cancel-btn {
+    color: #EF4444 !important;
+    border-color: rgba(239,68,68,0.3) !important;
+  }
+  .pm-cancel-btn:hover { background: rgba(239,68,68,0.1) !important; border-color: #EF4444 !important; }
+
+  /* ── Notification dropdown ── */
+  .tb-notif-dropdown {
+    position: absolute; top: calc(100% + 6px); right: 0;
+    width: 320px;
+    background: var(--tb-dropdown-bg);
+    border: 1px solid var(--tb-border);
+    border-radius: 14px;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.22);
+    z-index: 999; overflow: hidden;
+    animation: srFade 0.15s ease;
+  }
+  .tb-notif-hdr {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px 10px;
+    border-bottom: 1px solid var(--tb-border);
+  }
+  .tb-notif-hdr-title { font-size: 13px; font-weight: 800; color: var(--tb-text); }
+  .tb-notif-count {
+    font-size: 10px; font-weight: 700; padding: 2px 7px;
+    background: rgba(5,150,105,0.12); color: #34D399;
+    border: 1px solid rgba(5,150,105,0.2); border-radius: 10px;
+  }
+  .tb-notif-list { max-height: 340px; overflow-y: auto; }
+  .tb-notif-empty { padding: 24px; text-align: center; font-size: 13px; color: var(--tb-muted); }
+  .tb-notif-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--tb-border);
+    cursor: pointer; transition: background 0.1s;
+  }
+  .tb-notif-item:last-child { border-bottom: none; }
+  .tb-notif-item:hover { background: var(--tb-hover); }
+  .tb-notif-item-icon {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: rgba(5,150,105,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .tb-notif-item-title { font-size: 12px; font-weight: 700; color: var(--tb-text); }
+  .tb-notif-item-sub   { font-size: 11px; color: var(--tb-muted); margin-top: 2px; line-height: 1.4; }
+  .tb-notif-item-time  { font-size: 10px; color: var(--tb-muted); margin-top: 3px; opacity: 0.7; }
+  .tb-notif-footer {
+    padding: 9px 14px; text-align: center;
+    font-size: 12px; font-weight: 700; color: #059669;
+    border-top: 1px solid var(--tb-border);
+    cursor: pointer; transition: background 0.1s;
+  }
+  .tb-notif-footer:hover { background: var(--tb-hover); }
+
   /* ── Theme vars ── */
   [data-theme="dark"] {
     --tb-bg:           #080F1E;
@@ -363,13 +444,36 @@ const CSS = `
 
 // ── My Profile Modal ─────────────────────────────────────────────
 function ProfileModal({ user, onClose }) {
-  const [activeTab, setActiveTab] = useState("Personal Settings");
-  const tabs = ["Personal Settings", "Locale & Preferences", "Reporting Hierarchy", "Accessibility"];
-
   const username  = user?.username || "User";
   const rawRole   = Array.isArray(user?.roles) ? user.roles[0] : user?.roles;
   const roleLabel = rawRole?.replace("ROLE_", "").replace(/_/g, " ") || "Staff";
   const initials  = username.slice(0, 2).toUpperCase();
+
+  // Edit states
+  const [editUser, setEditUser] = React.useState(false);
+  const [editAddr, setEditAddr] = React.useState(false);
+
+  // User info fields
+  const [uInfo, setUInfo] = React.useState({
+    username, role: roleLabel,
+    email: username.toLowerCase() + "@hospital.com",
+    title: "", mobile: "", dob: "",
+  });
+  const [uDraft, setUDraft] = React.useState({ ...uInfo });
+
+  // Address fields
+  const [addr, setAddr] = React.useState({ street:"", city:"", state:"", zip:"", country:"", region:"" });
+  const [addrDraft, setAddrDraft] = React.useState({ ...addr });
+
+  const startEditUser = () => { setUDraft({ ...uInfo }); setEditUser(true); };
+  const saveUser  = () => { setUInfo({ ...uDraft }); setEditUser(false); };
+  const cancelUser = () => setEditUser(false);
+
+  const startEditAddr = () => { setAddrDraft({ ...addr }); setEditAddr(true); };
+  const saveAddr  = () => { setAddr({ ...addrDraft }); setEditAddr(false); };
+  const cancelAddr = () => setEditAddr(false);
+
+  const val = (v) => v || <span className="pm-field-empty">—</span>;
 
   return (
     <div className="profile-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -387,7 +491,7 @@ function ProfileModal({ user, onClose }) {
                 <div className="pm-meta">
                   <span className="pm-meta-item">🏥 Hospital Suite</span>
                   <span>·</span>
-                  <span className="pm-meta-item">✉️ {username.toLowerCase()}@hospital.com</span>
+                  <span className="pm-meta-item">✉️ {uInfo.email}</span>
                 </div>
                 <div className="pm-badges">
                   <span className="pm-badge admin">{roleLabel}</span>
@@ -397,86 +501,105 @@ function ProfileModal({ user, onClose }) {
             </div>
             <button className="pm-close" onClick={onClose}>✕</button>
           </div>
-          {/* Tabs */}
-          <div className="pm-tabs">
-            {tabs.map(t => (
-              <div key={t} className={`pm-tab${activeTab === t ? " active" : ""}`} onClick={() => setActiveTab(t)}>
-                {t}
-              </div>
-            ))}
-          </div>
         </div>
 
-        {/* Body */}
+        {/* Body — Personal Settings only */}
         <div className="pm-body">
-          {activeTab === "Personal Settings" && (
-            <>
-              {/* User Information */}
-              <div className="pm-section">
-                <div className="pm-section-hdr">
-                  <div className="pm-section-hdr-left">
-                    <div className="pm-section-num">1</div>
-                    <div className="pm-section-icon">👤</div>
-                    <div className="pm-section-title">User Information</div>
-                  </div>
-                  <button className="pm-edit-btn">✏️ Edit</button>
-                </div>
-                <div className="pm-fields">
-                  <div className="pm-field">
-                    <div className="pm-field-label">Username</div>
-                    <div className="pm-field-value">{username}</div>
-                  </div>
-                  <div className="pm-field">
-                    <div className="pm-field-label">Role</div>
-                    <div className="pm-field-value">{roleLabel}</div>
-                  </div>
-                  <div className="pm-field">
-                    <div className="pm-field-label">Email</div>
-                    <div className="pm-field-value">{username.toLowerCase()}@hospital.com</div>
-                  </div>
-                  <div className="pm-field">
-                    <div className="pm-field-label">Title</div>
-                    <div className="pm-field-value pm-field-empty">—</div>
-                  </div>
-                  <div className="pm-field">
-                    <div className="pm-field-label">Mobile</div>
-                    <div className="pm-field-value pm-field-empty">—</div>
-                  </div>
-                  <div className="pm-field">
-                    <div className="pm-field-label">Date of Birth</div>
-                    <div className="pm-field-value pm-field-empty">—</div>
-                  </div>
-                </div>
-              </div>
 
-              {/* Address Information */}
-              <div className="pm-section">
-                <div className="pm-section-hdr">
-                  <div className="pm-section-hdr-left">
-                    <div className="pm-section-num" style={{background:"linear-gradient(135deg,#7C3AED,#9333EA)"}}>2</div>
-                    <div className="pm-section-icon">📍</div>
-                    <div className="pm-section-title">Address Information</div>
+          {/* ── Section 1: User Information ── */}
+          <div className="pm-section">
+            <div className="pm-section-hdr">
+              <div className="pm-section-hdr-left">
+                <div className="pm-section-num">1</div>
+                <div className="pm-section-icon">👤</div>
+                <div className="pm-section-title">User Information</div>
+              </div>
+              {!editUser
+                ? <button className="pm-edit-btn" onClick={startEditUser}>✏️ Edit</button>
+                : <div style={{display:"flex",gap:8}}>
+                    <button className="pm-edit-btn pm-save-btn" onClick={saveUser}>✅ Save</button>
+                    <button className="pm-edit-btn pm-cancel-btn" onClick={cancelUser}>✕ Cancel</button>
                   </div>
-                  <button className="pm-edit-btn">✏️ Edit</button>
+              }
+            </div>
+
+            {!editUser ? (
+              <div className="pm-fields">
+                <div className="pm-field"><div className="pm-field-label">Username</div><div className="pm-field-value">{val(uInfo.username)}</div></div>
+                <div className="pm-field"><div className="pm-field-label">Role</div><div className="pm-field-value">{val(uInfo.role)}</div></div>
+                <div className="pm-field"><div className="pm-field-label">Email</div><div className="pm-field-value">{val(uInfo.email)}</div></div>
+                <div className="pm-field"><div className="pm-field-label">Title</div><div className="pm-field-value">{val(uInfo.title)}</div></div>
+                <div className="pm-field"><div className="pm-field-label">Mobile</div><div className="pm-field-value">{val(uInfo.mobile)}</div></div>
+                <div className="pm-field"><div className="pm-field-label">Date of Birth</div><div className="pm-field-value">{val(uInfo.dob)}</div></div>
+              </div>
+            ) : (
+              <div className="pm-fields">
+                <div className="pm-field">
+                  <div className="pm-field-label">Username</div>
+                  <input className="pm-input" value={uDraft.username} onChange={e=>setUDraft(d=>({...d,username:e.target.value}))} />
                 </div>
-                <div className="pm-fields">
-                  {["Street","City","State","Zip Code","Country","Region"].map(f => (
-                    <div key={f} className="pm-field">
-                      <div className="pm-field-label">{f}</div>
-                      <div className="pm-field-value pm-field-empty">—</div>
-                    </div>
-                  ))}
+                <div className="pm-field">
+                  <div className="pm-field-label">Role</div>
+                  <input className="pm-input" value={uDraft.role} readOnly style={{opacity:0.6,cursor:"not-allowed"}} />
+                </div>
+                <div className="pm-field">
+                  <div className="pm-field-label">Email</div>
+                  <input className="pm-input" type="email" value={uDraft.email} onChange={e=>setUDraft(d=>({...d,email:e.target.value}))} />
+                </div>
+                <div className="pm-field">
+                  <div className="pm-field-label">Title</div>
+                  <input className="pm-input" placeholder="e.g. Dr." value={uDraft.title} onChange={e=>setUDraft(d=>({...d,title:e.target.value}))} />
+                </div>
+                <div className="pm-field">
+                  <div className="pm-field-label">Mobile</div>
+                  <input className="pm-input" placeholder="+91 XXXXX XXXXX" value={uDraft.mobile} onChange={e=>setUDraft(d=>({...d,mobile:e.target.value}))} />
+                </div>
+                <div className="pm-field">
+                  <div className="pm-field-label">Date of Birth</div>
+                  <input className="pm-input" type="date" value={uDraft.dob} onChange={e=>setUDraft(d=>({...d,dob:e.target.value}))} />
                 </div>
               </div>
-            </>
-          )}
-          {activeTab !== "Personal Settings" && (
-            <div style={{textAlign:"center",padding:"60px 20px",color:"var(--tb-muted)",fontSize:14}}>
-              <div style={{fontSize:36,marginBottom:12}}>🚧</div>
-              <div style={{fontWeight:700,marginBottom:6}}>{activeTab}</div>
-              <div>This section is coming soon.</div>
+            )}
+          </div>
+
+          {/* ── Section 2: Address Information ── */}
+          <div className="pm-section">
+            <div className="pm-section-hdr">
+              <div className="pm-section-hdr-left">
+                <div className="pm-section-num" style={{background:"linear-gradient(135deg,#7C3AED,#9333EA)"}}>2</div>
+                <div className="pm-section-icon">📍</div>
+                <div className="pm-section-title">Address Information</div>
+              </div>
+              {!editAddr
+                ? <button className="pm-edit-btn" onClick={startEditAddr}>✏️ Edit</button>
+                : <div style={{display:"flex",gap:8}}>
+                    <button className="pm-edit-btn pm-save-btn" onClick={saveAddr}>✅ Save</button>
+                    <button className="pm-edit-btn pm-cancel-btn" onClick={cancelAddr}>✕ Cancel</button>
+                  </div>
+              }
             </div>
-          )}
+
+            {!editAddr ? (
+              <div className="pm-fields">
+                {[["Street",addr.street],["City",addr.city],["State",addr.state],["Zip Code",addr.zip],["Country",addr.country],["Region",addr.region]].map(([label,v])=>(
+                  <div key={label} className="pm-field">
+                    <div className="pm-field-label">{label}</div>
+                    <div className="pm-field-value">{val(v)}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="pm-fields">
+                <div className="pm-field"><div className="pm-field-label">Street</div><input className="pm-input" placeholder="123 Main St" value={addrDraft.street} onChange={e=>setAddrDraft(d=>({...d,street:e.target.value}))} /></div>
+                <div className="pm-field"><div className="pm-field-label">City</div><input className="pm-input" placeholder="City" value={addrDraft.city} onChange={e=>setAddrDraft(d=>({...d,city:e.target.value}))} /></div>
+                <div className="pm-field"><div className="pm-field-label">State</div><input className="pm-input" placeholder="State" value={addrDraft.state} onChange={e=>setAddrDraft(d=>({...d,state:e.target.value}))} /></div>
+                <div className="pm-field"><div className="pm-field-label">Zip Code</div><input className="pm-input" placeholder="000000" value={addrDraft.zip} onChange={e=>setAddrDraft(d=>({...d,zip:e.target.value}))} /></div>
+                <div className="pm-field"><div className="pm-field-label">Country</div><input className="pm-input" placeholder="Country" value={addrDraft.country} onChange={e=>setAddrDraft(d=>({...d,country:e.target.value}))} /></div>
+                <div className="pm-field"><div className="pm-field-label">Region</div><input className="pm-input" placeholder="Region" value={addrDraft.region} onChange={e=>setAddrDraft(d=>({...d,region:e.target.value}))} /></div>
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
     </div>
@@ -495,6 +618,10 @@ export default function Topbar({ sidebarWidth = 240 }) {
   const [profileOpen, setProfileOpen]   = useState(false);
   const [showProfile, setShowProfile]   = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [liveTime, setLiveTime]         = useState(new Date());
+  const [notifOpen, setNotifOpen]       = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const notifRef = useRef(null);
 
   const searchRef   = useRef(null);
   const profileRef  = useRef(null);
@@ -568,13 +695,49 @@ export default function Topbar({ sidebarWidth = 240 }) {
     return () => document.removeEventListener("fullscreenchange", h);
   }, []);
 
+  // Live clock tick
+  useEffect(() => {
+    const t = setInterval(() => setLiveTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Close notification dropdown on outside click
+  useEffect(() => {
+    if (!notifOpen) return;
+    const h = (e) => { if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, [notifOpen]);
+
+  // Fetch notifications from audit logs
+  useEffect(() => {
+    import("../../api/api").then(mod => {
+      const API = mod.default;
+      API.get("/hospital/audit/logs").then(r => {
+        const logs = (r.data || []).slice(0, 10);
+        setNotifications(logs.map(l => ({
+          id: l.logId || Math.random(),
+          icon: l.action === "CREATE" ? "🆕" : l.action === "UPDATE" ? "✏️" : l.action === "DELETE" ? "🗑️" : "📋",
+          title: l.module + " — " + l.action,
+          body: l.description || l.details || "System event",
+          time: l.actionTime,
+          read: false,
+        })));
+      }).catch(() => {
+        // fallback: show static welcome notification
+        setNotifications([{ id:1, icon:"🏥", title:"Dashboard loaded", body:"Hospital system is online and running.", time: new Date().toISOString(), read:false }]);
+      });
+    });
+  }, []);
+
   const doLogout = () => { logout(); navigate("/login"); };
 
   return (
     <>
       <style>{CSS}</style>
 
-      <div className="topbar-root" style={{ left: sidebarWidth, transition: "left 0.25s ease" }}>
+      <div className="topbar-root" style={{ left: sidebarWidth, right: 0, transition: "left 0.25s ease" }}>
+
         {/* Search */}
         <div className="topbar-search-wrap" ref={searchRef}>
           <span className="topbar-search-icon">🔍</span>
@@ -611,10 +774,15 @@ export default function Topbar({ sidebarWidth = 240 }) {
 
         <div className="topbar-spacer" />
 
-        {/* Date chip */}
-        <span style={{ fontSize: 11, fontWeight: 600, color: "var(--tb-muted)", marginRight: 8, whiteSpace: "nowrap" }}>
-          📅 {today}
-        </span>
+        {/* Live clock + date chip */}
+        <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", marginRight: 10, lineHeight:1.3, flexShrink:0 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--tb-text)", letterSpacing: "0.03em", fontFamily: "'DM Mono',monospace" }}>
+            {liveTime.toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false})}
+          </span>
+          <span style={{ fontSize: 10, fontWeight: 600, color: "var(--tb-muted)", whiteSpace: "nowrap" }}>
+            {liveTime.toLocaleDateString("en-IN",{weekday:"short",day:"2-digit",month:"short",year:"numeric"})}
+          </span>
+        </div>
 
         {/* Action buttons */}
         <div className="topbar-actions">
@@ -629,10 +797,37 @@ export default function Topbar({ sidebarWidth = 240 }) {
           </button>
 
           {/* Notifications */}
-          <button className="tb-btn" title="Notifications">
-            🔔
-            <span className="tb-notif-badge" />
-          </button>
+          <div style={{ position:"relative" }} ref={notifRef}>
+            <button className="tb-btn" title="Notifications" onClick={() => setNotifOpen(o => !o)}>
+              🔔
+              {notifications.length > 0 && <span className="tb-notif-badge" />}
+            </button>
+            {notifOpen && (
+              <div className="tb-notif-dropdown">
+                <div className="tb-notif-hdr">
+                  <span className="tb-notif-hdr-title">Notifications</span>
+                  <span className="tb-notif-count">{notifications.length}</span>
+                </div>
+                <div className="tb-notif-list">
+                  {notifications.length === 0 ? (
+                    <div className="tb-notif-empty">No notifications</div>
+                  ) : notifications.map((n, i) => (
+                    <div className="tb-notif-item" key={n.id || i}>
+                      <div className="tb-notif-item-icon">{n.icon}</div>
+                      <div className="tb-notif-item-body">
+                        <div className="tb-notif-item-title">{n.title}</div>
+                        <div className="tb-notif-item-sub">{n.body}</div>
+                        {n.time && <div className="tb-notif-item-time">{new Date(n.time).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"})} · {new Date(n.time).toLocaleDateString("en-IN",{day:"2-digit",month:"short"})}</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="tb-notif-footer" onClick={() => setNotifOpen(false)}>
+                  Mark all as read
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="tb-divider" />
 
@@ -684,20 +879,6 @@ export default function Topbar({ sidebarWidth = 240 }) {
                   <div className="tb-pd-item-info">
                     <div className="tb-pd-item-title">My Profile</div>
                     <div className="tb-pd-item-sub">Personal settings & preferences</div>
-                  </div>
-                </div>
-                <div className="tb-pd-item" onClick={() => { setProfileOpen(false); toggleTheme(); }}>
-                  <span className="tb-pd-item-icon">{isDark ? "☀️" : "🌙"}</span>
-                  <div className="tb-pd-item-info">
-                    <div className="tb-pd-item-title">{isDark ? "Light Mode" : "Dark Mode"}</div>
-                    <div className="tb-pd-item-sub">Toggle color theme</div>
-                  </div>
-                </div>
-                <div className="tb-pd-item" onClick={toggleFullscreen}>
-                  <span className="tb-pd-item-icon">⛶</span>
-                  <div className="tb-pd-item-info">
-                    <div className="tb-pd-item-title">{isFullscreen ? "Exit Fullscreen" : "Fullscreen"}</div>
-                    <div className="tb-pd-item-sub">Expand to full screen</div>
                   </div>
                 </div>
                 <div className="tb-pd-sep" />
