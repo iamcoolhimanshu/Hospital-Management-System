@@ -423,8 +423,6 @@ IMAGES -
 
 <img width="1901" height="1009" alt="Screenshot 2026-06-06 224902" src="https://github.com/user-attachments/assets/d76cf377-b517-4a25-bd02-ba2df3928c66" />
 
---
 
-<img width="1109" height="715" alt="Screenshot 2026-06-06 232543" src="https://github.com/user-attachments/assets/e1ff1a62-3d0e-4bbf-a215-c58e719edcf4" />
 
 
