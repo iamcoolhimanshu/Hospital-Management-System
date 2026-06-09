@@ -20,8 +20,8 @@ public class JwtUtils {
     @Value("${jwt.secret:HmsSecret@Himanshu2024MustBe32CharsLong!}")
     private String jwtSecret;
 
-    @Value("${jwt.expiration-ms:86400000}")
-    private long jwtExpirationMs;   // default 24 h
+    @Value("${jwt.expiration-ms:604800000}")
+    private long jwtExpirationMs;   // default 7 days (was 24h)
 
     // ── Generate ──────────────────────────────────────────────
 

@@ -41,11 +41,26 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                 userDetails, null, userDetails.getAuthorities());
                         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authToken);
+                    } else {
+                        // Token invalid or expired — return 401 so frontend redirects to login
+                        log.warn("JWT token invalid or expired for user: {}", username);
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"error\":\"Token expired or invalid. Please login again.\"}");
+                        return;
                     }
                 }
             }
         } catch (Exception e) {
             log.warn("JWT filter error: {}", e.getMessage());
+            // If Authorization header present but malformed — return 401
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\":\"Invalid token. Please login again.\"}");
+                return;
+            }
         }
         chain.doFilter(request, response);
     }
