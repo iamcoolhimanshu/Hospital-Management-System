@@ -4,15 +4,13 @@ const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem("hms_theme") || "light"; // default = light
-    document.documentElement.setAttribute("data-theme", saved);
-    return saved;
+    document.documentElement.setAttribute("data-theme", "light");
+    return "light";
   });
 
   const toggleTheme = () => {
     setTheme(prev => {
       const next = prev === "dark" ? "light" : "dark";
-      localStorage.setItem("hms_theme", next);
       document.documentElement.setAttribute("data-theme", next);
       return next;
     });

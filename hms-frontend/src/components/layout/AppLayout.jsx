@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
@@ -8,6 +8,56 @@ import NexusAssistant from "../nexus/NexusAssistant";
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const { isDark } = useTheme();
+
+  // ── Inject Google Translate widget (hidden) ───────────────────────
+  useEffect(() => {
+    // Define the callback BEFORE loading the script
+    window.googleTranslateElementInit = function () {
+      new window.google.translate.TranslateElement(
+        {
+          pageLanguage: "en",
+          autoDisplay: false,
+          layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+        },
+        "google_translate_element"
+      );
+    };
+
+    // Only inject script once
+    if (!document.getElementById("google-translate-script")) {
+      const script = document.createElement("script");
+      script.id = "google-translate-script";
+      script.src =
+        "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+      script.async = true;
+      document.body.appendChild(script);
+    }
+
+    // Hide the Google Translate banner/toolbar via CSS
+    const style = document.createElement("style");
+    style.id = "goog-translate-hide";
+    style.textContent = `
+      .goog-te-banner-frame,
+      .goog-te-balloon-frame,
+      #goog-gt-tt,
+      .goog-te-balloon-frame,
+      .goog-tooltip,
+      .goog-tooltip:hover,
+      .goog-text-highlight {
+        display: none !important;
+      }
+      body {
+        top: 0px !important;
+        position: static !important;
+      }
+      .skiptranslate {
+        display: none !important;
+      }
+    `;
+    if (!document.getElementById("goog-translate-hide")) {
+      document.head.appendChild(style);
+    }
+  }, []);
 
   const sidebarWidth = collapsed ? 64 : 240;
 
@@ -38,7 +88,7 @@ export default function AppLayout() {
         overflowX: "hidden",
         display: "flex",
         flexDirection: "column",
-        paddingTop: 52,
+        paddingTop: 56,
         background: isDark ? "#0A1628" : "#F0F4FA",
         transition: "background 0.25s ease",
       }}>
@@ -47,6 +97,9 @@ export default function AppLayout() {
 
       {/* ── Nexus AI Assistant (floating) ── */}
       <NexusAssistant />
+
+      {/* Hidden Google Translate widget container (required by the script) */}
+      <div id="google_translate_element" style={{ display: "none" }} />
     </div>
   );
 }

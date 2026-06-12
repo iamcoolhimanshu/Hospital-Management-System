@@ -2,6 +2,7 @@ import React, { Suspense } from "react";
 import { useParams } from "react-router-dom";
 import HospitalManagement, { CrudTab, TAB_CONFIG_MAP } from "../pages/HospitalManagement/Hospitalmanagement";
 import DashboardPage from "../pages/HospitalManagement/Dashboard";
+import AppointmentManagement from "../pages/HospitalManagement/appointment/AppointmentManagement";
 
 function LoadingScreen() {
   return (
@@ -15,7 +16,7 @@ function LoadingScreen() {
     }}>
       <span style={{ animation: "spin 0.8s linear infinite", display: "inline-flex" }}>
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
         </svg>
       </span>
       Loading module…
@@ -32,6 +33,15 @@ export default function HospitalRoutes() {
     return (
       <Suspense fallback={<LoadingScreen />}>
         <DashboardPage />
+      </Suspense>
+    );
+  }
+
+  // appointment → dedicated Appointment Management page
+  if (tab === "appointment") {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <AppointmentManagement />
       </Suspense>
     );
   }

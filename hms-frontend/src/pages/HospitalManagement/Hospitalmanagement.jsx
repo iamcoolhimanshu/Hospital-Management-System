@@ -81,6 +81,7 @@ const CSS = `
     font-family: 'DM Sans', sans-serif; color: var(--hm-text);
     background: var(--hm-bg); min-height: 100vh;
     transition: background 0.25s, color 0.25s;
+    overflow-x: hidden;
   }
 
   /* ── Module Header (like Service Management) ── */
@@ -91,6 +92,7 @@ const CSS = `
     border-radius: 0;
     box-shadow: 0 2px 12px rgba(4,120,87,0.2);
     position: sticky; top: 0; z-index: 100;
+    flex-wrap: wrap; gap: 10px;
   }
   .mod-header-left { display:flex; align-items:center; gap:14px; }
   .mod-header-icon {
@@ -251,15 +253,15 @@ const CSS = `
   .hm-content {
     background: var(--hm-content); border-radius: 0;
     border: none;
-    overflow: hidden; min-height: 100vh;
+    overflow-x: hidden; min-height: 100vh;
   }
   .card { background:var(--hm-card); border-radius:16px; border:1px solid var(--hm-card-border); box-shadow:0 2px 12px rgba(0,0,0,0.06); overflow:hidden; }
 
   /* ── Section header ── */
-  .sec-hdr { display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-bottom:1px solid var(--hm-row-border); background:var(--hm-card); }
-  .sec-title { font-size:14px; font-weight:700; color:var(--hm-text); display:flex; align-items:center; gap:8px; }
+  .sec-hdr { display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-bottom:1px solid var(--hm-row-border); background:var(--hm-card); flex-wrap:wrap; gap:10px; }
+  .sec-title { font-size:14px; font-weight:700; color:var(--hm-text); display:flex; align-items:center; gap:8px; flex-shrink:0; }
   .sec-title-icon { width:30px; height:30px; background:linear-gradient(135deg,#ECFDF5,#D1FAE5); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#047857; }
-  .sec-right { display:flex; align-items:center; gap:10px; }
+  .sec-right { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 
   /* ── Search ── */
   .search-wrap { position:relative; }
@@ -485,6 +487,7 @@ const CSS = `
     .db-top-row { grid-template-columns:1fr 1fr; }
     .kpi-grid { grid-template-columns:repeat(3,1fr); }
     .kpi-grid.cols-6 { grid-template-columns:repeat(3,1fr); }
+    .hm-grid { grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); }
   }
   @media (max-width:900px) {
     .kpi-grid { grid-template-columns:repeat(2,1fr); }
@@ -492,10 +495,160 @@ const CSS = `
     .form-grid-2,.form-grid-3 { grid-template-columns:1fr; }
     .db-top-row { grid-template-columns:1fr; }
     .db-bottom-row { grid-template-columns:1fr; }
+    .hm-grid { grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:14px; }
+    .hm-grid-wrap { padding:0 14px; }
+    .mod-header { padding:12px 16px; }
+    .mod-header-date { display:none; }
+    .sec-hdr { padding:12px 14px; }
+    .search-input { width:160px; }
   }
   @media (max-width:700px) {
     .topnav-section-label { display: none; }
     .hm-topnav-divider { display: none; }
+    .hm-grid { grid-template-columns:1fr; gap:12px; }
+    .hm-grid-wrap { padding:0 10px; }
+    .kpi-grid { grid-template-columns:1fr; }
+    .kpi-grid.cols-4,.kpi-grid.cols-6 { grid-template-columns:1fr; }
+    .mod-header-actions { display:none; }
+    .sec-right { width:100%; }
+    .search-input { width:100%; }
+    .view-toggle-group { flex:0 0 auto; }
+  }
+
+  /* ── View Toggle Segment Control ── */
+  .view-toggle-group {
+    display: flex;
+    background: var(--hm-sec-hdr);
+    border-radius: 8px;
+    padding: 2px;
+    border: 1px solid var(--hm-card-border);
+  }
+  .view-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--hm-text-muted);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .view-toggle-btn:hover {
+    color: var(--hm-text);
+  }
+  .view-toggle-btn.active {
+    background: var(--hm-card);
+    color: #047857;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  /* ── Grid View Layout ── */
+  .hm-grid-wrap {
+    padding: 0 20px;
+    overflow-x: hidden;
+  }
+  .hm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
+  }
+  .hm-card {
+    background: var(--hm-card);
+    border: 1px solid var(--hm-card-border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px var(--hm-shadow);
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+  }
+  .hm-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(4,120,87,0.15);
+    border-color: #A7F3D0;
+  }
+  .hm-card-header {
+    padding: 16px 20px;
+    color: #fff;
+    background: linear-gradient(135deg, #065F46 0%, #047857 50%, #059669 100%);
+    position: relative;
+  }
+  .hm-card-header.inactive {
+    background: linear-gradient(135deg, #475569 0%, #64748B 100%);
+  }
+  .hm-card-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.3;
+  }
+  .hm-card-subtitle {
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+  .hm-card-body {
+    padding: 18px 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .hm-card-desc {
+    font-size: 12.5px;
+    color: var(--hm-text-muted);
+    line-height: 1.5;
+  }
+  .hm-card-info-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .hm-card-info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--hm-text);
+  }
+  .hm-card-info-icon {
+    font-size: 14px;
+    width: 20px;
+    display: flex;
+    justify-content: center;
+    opacity: 0.8;
+  }
+  .hm-card-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid var(--hm-divider);
+  }
+  .hm-card-badge {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 6px;
+  }
+  .hm-card-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--hm-divider);
+    background: var(--hm-thead);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
   }
 `;
 
@@ -1175,6 +1328,7 @@ export function CrudTab({ config }) {
   const [form, setForm]       = useState({});
   const [saving, setSaving]   = useState(false);
   const [preview, setPreview] = useState(null);
+  const [viewMode, setViewMode] = useState(config.defaultView || "table");
   const [snack, setSnack]     = useState({open:false,msg:"",sev:"success"});
   const [printClaim, setPrintClaim] = useState(null);
   const [hospitals, setHospitals] = useState([]);
@@ -1352,6 +1506,14 @@ export function CrudTab({ config }) {
           <span className="tab-badge" style={{marginLeft:4}}>{filtered.length}</span>
         </div>
         <div className="sec-right">
+          <div className="view-toggle-group" style={{marginRight:8}}>
+            <button className={`view-toggle-btn ${viewMode==="table"?"active":""}`} onClick={()=>setViewMode("table")} title="Table View">
+              📄 Table
+            </button>
+            <button className={`view-toggle-btn ${viewMode==="grid"?"active":""}`} onClick={()=>setViewMode("grid")} title="Grid View">
+              🎴 Grid
+            </button>
+          </div>
           <div className="search-wrap">
             {IcSearch}
             <input className="search-input" placeholder="Search…" value={search} onChange={e=>setSearch(e.target.value)}/>
@@ -1371,58 +1533,121 @@ export function CrudTab({ config }) {
         </div>
       )}
 
-      <div className="tbl-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              {columns.map(c=><th key={c.key}>{c.label}</th>)}
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? <Loading/> : filtered.length===0 ? <EmptyState msg={`No ${title} found`} icon={emptyIcon}/> :
-              filtered.map((row,i)=>(
-                <tr key={getRowId(row)||i} onClick={()=>setPreview(p=>getRowId(p)===getRowId(row)?null:row)} style={{cursor:"pointer"}}>
-                  <td className="num-cell">{i+1}</td>
-                  {columns.map(c=>(
-                    <td key={c.key}>
-                      {c.render ? c.render(row[c.key], row)
-                        : c.key===statusField ? <StatusBadge value={row[c.key]}/>
-                        : c.isName ? (
-                          <div className="name-cell">
-                            {av(String(row[c.key]||"?"))}
-                            <div>
-                              <div className="name-text">{row[c.key]||"—"}</div>
-                              {c.sub && <div className="name-sub">{row[c.sub]||""}</div>}
+      {viewMode === "table" ? (
+        <div className="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                {columns.map(c=><th key={c.key}>{c.label}</th>)}
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? <Loading/> : filtered.length===0 ? <EmptyState msg={`No ${title} found`} icon={emptyIcon}/> :
+                filtered.map((row,i)=>(
+                  <tr key={getRowId(row)||i} onClick={()=>setPreview(p=>getRowId(p)===getRowId(row)?null:row)} style={{cursor:"pointer"}}>
+                    <td className="num-cell">{i+1}</td>
+                    {columns.map(c=>(
+                      <td key={c.key}>
+                        {c.render ? c.render(row[c.key], row)
+                          : c.key===statusField ? <StatusBadge value={row[c.key]}/>
+                          : c.isName ? (
+                            <div className="name-cell">
+                              {av(String(row[c.key]||"?"))}
+                              <div>
+                                <div className="name-text">{row[c.key]||"—"}</div>
+                                {c.sub && <div className="name-sub">{row[c.sub]||""}</div>}
+                              </div>
                             </div>
-                          </div>
-                        ) : (row[c.key]??<span style={{color:"#CBD5E1"}}>—</span>)}
+                          ) : (row[c.key]??<span style={{color:"#CBD5E1"}}>—</span>)}
+                      </td>
+                    ))}
+                    <td>
+                      <div className="actions-cell" onClick={e=>e.stopPropagation()}>
+                        <button className="btn-icon-sm edit" title="Edit" onClick={()=>openEdit(row)}>
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#047857" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        {isInsurance && (
+                          <button className="btn-icon-sm" title="Print Claim" onClick={()=>setPrintClaim(row)} style={{color:"#2563EB"}}>
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#2563EB" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                          </button>
+                        )}
+                        {deleteEndpoint && (
+                        <button className="btn-icon-sm del" title="Delete" onClick={()=>setDelItem(row)}>
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#DC2626" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                        </button>
+                        )}
+                      </div>
                     </td>
-                  ))}
-                  <td>
-                    <div className="actions-cell" onClick={e=>e.stopPropagation()}>
-                      <button className="btn-icon-sm edit" title="Edit" onClick={()=>openEdit(row)}>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="hm-grid-wrap">
+          {loading ? (
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:48,color:"var(--hm-text-faint)"}}><span className="spin-anim" style={{marginRight:8}}>{IcSpin}</span> Loading…</div>
+          ) : filtered.length === 0 ? (
+            <div style={{textAlign:"center",padding:48}}>
+              <div className="empty-icon-wrap" style={{width:60,height:60,borderRadius:14,background:"#F0FDF4",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px",fontSize:28}}>{emptyIcon || "🏥"}</div>
+              <div className="empty-title" style={{fontSize:14,fontWeight:600,color:"#94A3B8"}}>No {title} found</div>
+            </div>
+          ) : (
+            <div className="hm-grid">
+              {filtered.map((row, i) => {
+                if (config.renderGridCard) {
+                  return config.renderGridCard(row, i, { openEdit, setDelItem, setPreview, getRowId });
+                }
+                const firstVal = row[columns[0]?.key];
+                const statusVal = row[statusField];
+                return (
+                  <div key={getRowId(row) || i} className="hm-card" onClick={() => setPreview(row)} style={{ cursor: "pointer" }}>
+                    <div className="hm-card-header">
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+                        <div className="hm-card-title">{firstVal || "Record Details"}</div>
+                        {statusField && (
+                          <span style={{ flexShrink: 0 }} onClick={e=>e.stopPropagation()}>
+                            <StatusBadge value={statusVal} />
+                          </span>
+                        )}
+                      </div>
+                      <div className="hm-card-subtitle">ID: {getRowId(row) || "—"}</div>
+                    </div>
+                    <div className="hm-card-body">
+                      <div className="hm-card-info-grid">
+                        {columns.slice(1).map(c => {
+                          const val = row[c.key];
+                          if (val === undefined || val === null || val === "") return null;
+                          return (
+                            <div className="hm-card-info-item" key={c.key}>
+                              <span className="hm-card-info-icon">🔹</span>
+                              <strong style={{fontSize:12,color:"var(--hm-text-muted)"}}>{c.label}:</strong>
+                              <span style={{fontSize:13,color:"var(--hm-text)"}}>{c.render ? c.render(val, row) : String(val)}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="hm-card-footer" onClick={e => e.stopPropagation()}>
+                      <button className="btn-icon-sm edit" title="Edit" onClick={() => openEdit(row)}>
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#047857" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                       </button>
-                      {isInsurance && (
-                        <button className="btn-icon-sm" title="Print Claim" onClick={()=>setPrintClaim(row)} style={{color:"#2563EB"}}>
-                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#2563EB" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                      {deleteEndpoint && (
+                        <button className="btn-icon-sm del" title="Delete" onClick={() => setDelItem(row)}>
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#DC2626" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                         </button>
                       )}
-                      {deleteEndpoint && (
-                      <button className="btn-icon-sm del" title="Delete" onClick={()=>setDelItem(row)}>
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#DC2626" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                      </button>
-                      )}
                     </div>
-                  </td>
-                </tr>
-              ))
-            }
-          </tbody>
-        </table>
-      </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className={`preview-panel${preview?" open":""}`}>
         {preview && (
@@ -1511,7 +1736,7 @@ export function CrudTab({ config }) {
                           ? activeAdmissions.map(a=><option key={a.value} value={a.value}>{a.label}</option>)
                           : <option disabled>No active admissions found</option>}
                       </select>
-                  : (f.key==="billingCleared" || f.key==="doctorApproved")
+                  : (f.key==="billingCleared" || f.key==="doctorApproved" || f.type==="booleanSelect" || f.key==="isActive")
                     ? <select style={{width:"100%",padding:"8px 10px",border:"1.5px solid var(--hm-input-border)",borderRadius:8,fontSize:13,background:"var(--hm-input-bg)",color:"var(--hm-text)"}}
                         value={form[f.key]===true?"true":form[f.key]===false?"false":""}
                         onChange={e=>fi(f.key, e.target.value==="true" ? true : e.target.value==="false" ? false : null)}>
@@ -2188,9 +2413,13 @@ const HOSPITAL_CONFIG = {
   updateEndpoint:"/hospital",
   deleteEndpoint:"/hospital",
   statusField:"isActive", emptyIcon:"🏥",
+  defaultView: "grid",
   kpiCards:[
-    {label:"Total Hospitals",color:"teal",  icon:"🏥",compute:r=>r.length},
-    {label:"Active",         color:"green", icon:"✅",compute:r=>r.filter(h=>h.isActive===true||h.isActive===1).length},
+    {label:"Total Hospitals",   color:"teal",   icon:"🏥",compute:r=>r.length},
+    {label:"Active Hospitals",  color:"green",  icon:"✅",compute:r=>r.filter(h=>h.isActive===true||h.isActive===1).length},
+    {label:"Total Bed Capacity",color:"blue",   icon:"🛏️",compute:r=>r.reduce((s,h)=>s+(Number(h.totalBeds)||0),0)},
+    {label:"Private Type",      color:"violet", icon:"🩺",compute:r=>r.filter(h=>(h.hospitalType||"").toUpperCase()==="PRIVATE").length},
+    {label:"Covered Cities",    color:"amber",  icon:"📍",compute:r=>new Set(r.map(h=>h.city).filter(Boolean)).size},
   ],
   columns:[
     {key:"hospitalName",      label:"Hospital",isName:true,sub:"registrationNumber"},
@@ -2213,9 +2442,72 @@ const HOSPITAL_CONFIG = {
       {key:"hospitalType",       label:"Hospital Type",        type:"select",lookupType:"HOSPITAL_TYPE"},
       {key:"totalBeds",          label:"Total Beds",           type:"number",placeholder:"Total bed count"},
       {key:"website",            label:"Website",              placeholder:"https://..."},
+      {key:"isActive",           label:"Is Active?",           type:"booleanSelect"},
       {key:"description",        label:"Description",          type:"textarea",placeholder:"About the hospital",rows:2},
     ]},
   ],
+  renderGridCard: (row, i, { openEdit, setDelItem, setPreview }) => {
+    const isActive = row.isActive === true || row.isActive === 1;
+    return (
+      <div key={row.hospitalId || i} className="hm-card" onClick={() => setPreview(row)} style={{ cursor: "pointer" }}>
+        <div className={`hm-card-header ${!isActive ? 'inactive' : ''}`}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+            <div className="hm-card-title">{row.hospitalName}</div>
+            <span className="hm-card-badge" style={{ background: isActive ? "#D1FAE5" : "#FEE2E2", color: isActive ? "#065F46" : "#991B1B", fontWeight: 700, borderRadius: 20, padding: "2px 8px", fontSize: 10 }}>
+              {isActive ? "Active" : "Inactive"}
+            </span>
+          </div>
+          <div className="hm-card-subtitle">Reg No: {row.registrationNumber || "—"}</div>
+        </div>
+        <div className="hm-card-body">
+          {row.description && (
+            <div className="hm-card-desc" style={{ marginBottom: 6 }}>
+              {row.description}
+            </div>
+          )}
+          <div className="hm-card-info-grid">
+            <div className="hm-card-info-item">
+              <span className="hm-card-info-icon">📍</span>
+              <span style={{ fontSize: 13, color: "var(--hm-text)" }}>
+                {row.address || "—"}{row.city ? `, ${row.city}` : ""}{row.state ? `, ${row.state}` : ""}
+              </span>
+            </div>
+            <div className="hm-card-info-item">
+              <span className="hm-card-info-icon">📞</span>
+              <span style={{ fontSize: 13, color: "var(--hm-text)" }}>{row.phone || "—"}</span>
+            </div>
+            {row.email && (
+              <div className="hm-card-info-item">
+                <span className="hm-card-info-icon">✉️</span>
+                <span style={{ fontSize: 12.5, color: "var(--hm-text)", wordBreak: "break-all" }}>{row.email}</span>
+              </div>
+            )}
+            {row.website && (
+              <div className="hm-card-info-item">
+                <span className="hm-card-info-icon">🌐</span>
+                <a href={row.website.startsWith("http") ? row.website : `https://${row.website}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: "#047857", textDecoration: "none", fontWeight: 600, fontSize: 13 }}>
+                  {row.website.replace(/^https?:\/\//, "")}
+                </a>
+              </div>
+            )}
+          </div>
+          <div className="hm-card-badges">
+            <span className="badge badge-teal">🏥 {row.hospitalType || "GENERAL"}</span>
+            {row.totalBeds && <span className="badge badge-blue">🛏️ {row.totalBeds} Beds</span>}
+            {row.pincode && <span className="badge badge-slate">📮 {row.pincode}</span>}
+          </div>
+        </div>
+        <div className="hm-card-footer" onClick={e => e.stopPropagation()}>
+          <button className="btn-icon-sm edit" title="Edit" onClick={() => openEdit(row)}>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#047857" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button className="btn-icon-sm del" title="Delete" onClick={() => setDelItem(row)}>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#DC2626" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          </button>
+        </div>
+      </div>
+    );
+  }
 };
 
 const DEPARTMENT_CONFIG = {
