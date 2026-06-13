@@ -1327,7 +1327,7 @@ export function CrudTab({ config }) {
   const [delItem, setDelItem] = useState(null);
   const [form, setForm]       = useState({});
   const [saving, setSaving]   = useState(false);
-  const [preview, setPreview] = useState(null);
+
   const [viewMode, setViewMode] = useState(config.defaultView || "table");
   const [snack, setSnack]     = useState({open:false,msg:"",sev:"success"});
   const [printClaim, setPrintClaim] = useState(null);
@@ -1442,7 +1442,7 @@ export function CrudTab({ config }) {
       await API.delete(`${del}/${rowId}`);
       setSnack({open:true,msg:"Record deleted.",sev:"success"});
       const delId = getRowId(delItem);
-      setDelItem(null); if(getRowId(preview)===delId) setPreview(null); load();
+      setDelItem(null); load();
     } catch(e) {
       const msg = e?.response?.data?.message || "Delete failed.";
       setSnack({open:true,msg:String(msg).slice(0,120),sev:"error"});
@@ -1546,7 +1546,7 @@ export function CrudTab({ config }) {
             <tbody>
               {loading ? <Loading/> : filtered.length===0 ? <EmptyState msg={`No ${title} found`} icon={emptyIcon}/> :
                 filtered.map((row,i)=>(
-                  <tr key={getRowId(row)||i} onClick={()=>setPreview(p=>getRowId(p)===getRowId(row)?null:row)} style={{cursor:"pointer"}}>
+                  <tr key={getRowId(row)||i}>
                     <td className="num-cell">{i+1}</td>
                     {columns.map(c=>(
                       <td key={c.key}>
@@ -1599,12 +1599,12 @@ export function CrudTab({ config }) {
             <div className="hm-grid">
               {filtered.map((row, i) => {
                 if (config.renderGridCard) {
-                  return config.renderGridCard(row, i, { openEdit, setDelItem, setPreview, getRowId });
+                  return config.renderGridCard(row, i, { openEdit, setDelItem, getRowId });
                 }
                 const firstVal = row[columns[0]?.key];
                 const statusVal = row[statusField];
                 return (
-                  <div key={getRowId(row) || i} className="hm-card" onClick={() => setPreview(row)} style={{ cursor: "pointer" }}>
+                  <div key={getRowId(row) || i} className="hm-card">
                     <div className="hm-card-header">
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
                         <div className="hm-card-title">{firstVal || "Record Details"}</div>
@@ -1649,40 +1649,7 @@ export function CrudTab({ config }) {
         </div>
       )}
 
-      <div className={`preview-panel${preview?" open":""}`}>
-        {preview && (
-          <>
-            <div className="preview-header">
-              <div className="preview-hdr-left">
-                {av(String(preview[columns[0]?.key]||"?"),40)}
-                <div>
-                  <div className="preview-name">{preview[columns[0]?.key]||"Record"}</div>
-                  <div className="preview-code">ID: {preview.id||preview.patientId||preview.doctorId||"—"}</div>
-                </div>
-              </div>
-              <button className="preview-close" onClick={()=>setPreview(null)}>×</button>
-            </div>
-            <div className="preview-actions">
-              <button className="preview-btn edit" onClick={()=>{openEdit(preview);setPreview(null);}}>✏️ Edit</button>
-              {isInsurance && <button className="preview-btn" style={{background:"#EFF6FF",color:"#2563EB"}} onClick={()=>{setPrintClaim(preview);setPreview(null);}}>🖨️ Print</button>}
-              {deleteEndpoint && <button className="preview-btn del"  onClick={()=>{setDelItem(preview);setPreview(null);}}>🗑️ Delete</button>}
-            </div>
-            <div className="preview-body">
-              <div className="preview-section">
-                <div className="preview-section-title">Details</div>
-                {columns.map(c=>(
-                  <div className="preview-row" key={c.key}>
-                    <div className="preview-label">{c.label}</div>
-                    <div className="preview-val">
-                      {c.key===statusField ? <StatusBadge value={preview[c.key]}/> : (String(preview[c.key]||"—"))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-      </div>
+
 
       <Modal open={modal} size="lg" onClose={()=>setModal(false)}
         iconEmoji={icon} title={`${editing?"Edit":"Add"} ${title}`}
@@ -2446,10 +2413,10 @@ const HOSPITAL_CONFIG = {
       {key:"description",        label:"Description",          type:"textarea",placeholder:"About the hospital",rows:2},
     ]},
   ],
-  renderGridCard: (row, i, { openEdit, setDelItem, setPreview }) => {
+  renderGridCard: (row, i, { openEdit, setDelItem }) => {
     const isActive = row.isActive === true || row.isActive === 1;
     return (
-      <div key={row.hospitalId || i} className="hm-card" onClick={() => setPreview(row)} style={{ cursor: "pointer" }}>
+      <div key={row.hospitalId || i} className="hm-card">
         <div className={`hm-card-header ${!isActive ? 'inactive' : ''}`}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
             <div className="hm-card-title">{row.hospitalName}</div>
