@@ -10,9 +10,12 @@ import codewithhimanshu.appointment.entity.Appointment_t;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface Appointment_Repository extends JpaRepository<Appointment_t, Long> {
+
+	Optional<Appointment_t> findByAppointmentNumber(String appointmentNumber);
 
 	List<Appointment_t> findByAccountIdOrderByAppointmentDateDescStartTimeDesc(Long accountId);
 
