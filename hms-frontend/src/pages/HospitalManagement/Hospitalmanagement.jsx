@@ -4,6 +4,7 @@ import { CircularProgress, Snackbar, Alert } from "@mui/material";
 import API from "../../api/api";
 import { useLookup } from "../../hooks/useLookup";
 import { useTheme } from "../../hooks/useTheme";
+import AIMedicineRecommendation from "./AIMedicineRecommendation";
 
 const fmt   = v => v ? new Date(v).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) : "—";
 const fmtT  = v => v ? new Date(v).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"}) : "—";
@@ -1651,7 +1652,7 @@ export function CrudTab({ config }) {
 
 
 
-      <Modal open={modal} size="lg" onClose={()=>setModal(false)}
+      <Modal open={modal} size={title === "Prescription Management" ? "xl" : "lg"} onClose={()=>setModal(false)}
         iconEmoji={icon} title={`${editing?"Edit":"Add"} ${title}`}
         subtitle={editing?"Update existing record":"Create new record"}
         footer={
@@ -1663,79 +1664,165 @@ export function CrudTab({ config }) {
           </>
         }
       >
-        {(formFields||[]).map((section,si)=>(
-          <div key={si}>
-            {section.section && <div className="sec-divider">{section.section}</div>}
-            <div className={`form-grid-${section.cols||2}`} style={{marginBottom:16}}>
-              {(section.fields||[]).map(f=>(
-                <FG key={f.key} label={f.label} req={f.req} error={f.req&&!form[f.key]&&saving?`${f.label} is required`:""}>
-                  {f.type==="hospitalSelect" || (f.key==="hospitalId" && hospitals.length>0)
-                    ? <select style={{width:"100%",padding:"8px 10px",border:"1.5px solid var(--hm-input-border)",borderRadius:8,fontSize:13,background:"var(--hm-input-bg)",color:"var(--hm-text)"}}
-                        value={form[f.key]||""} onChange={e=>fi(f.key,Number(e.target.value)||e.target.value)}>
-                        <option value="">— Select Hospital —</option>
-                        {hospitals.map(h=><option key={h.value} value={h.value}>{h.label}</option>)}
-                      </select>
-                  : f.type==="wardSelect"
-                    ? <select style={{width:"100%",padding:"8px 10px",border:"1.5px solid var(--hm-input-border)",borderRadius:8,fontSize:13,background:"var(--hm-input-bg)",color:"var(--hm-text)"}}
-                        value={form[f.key]||""} onChange={e=>{fi(f.key,Number(e.target.value)); fi("bedId","");}}>
-                        <option value="">— Select Ward —</option>
-                        {wards.length>0
-                          ? wards.map(w=><option key={w.value} value={w.value}>{w.label}</option>)
-                          : <option disabled>No wards found</option>}
-                      </select>
-                  : f.type==="bedSelect"
-                    ? <select style={{width:"100%",padding:"8px 10px",border:"1.5px solid var(--hm-input-border)",borderRadius:8,fontSize:13,background:"var(--hm-input-bg)",color:"var(--hm-text)"}}
-                        value={form[f.key]||""} onChange={e=>fi(f.key,Number(e.target.value))}>
-                        <option value="">— Select Bed —</option>
-                        {(form.wardId
-                          ? availableBeds.filter(b=>b.wardId===form.wardId)
-                          : availableBeds
-                        ).length>0
-                          ? (form.wardId ? availableBeds.filter(b=>b.wardId===form.wardId) : availableBeds)
-                              .map(b=><option key={b.value} value={b.value}>{b.label}</option>)
-                          : <option disabled>{form.wardId ? "No available beds in this ward" : "Select a ward first"}</option>}
-                      </select>
-                  : f.type==="admissionSelect"
-                    ? <select style={{width:"100%",padding:"8px 10px",border:"1.5px solid var(--hm-input-border)",borderRadius:8,fontSize:13,background:"var(--hm-input-bg)",color:"var(--hm-text)"}}
-                        value={form[f.key]||""} onChange={e=>fi(f.key,Number(e.target.value))}>
-                        <option value="">— Select Active Admission —</option>
-                        {activeAdmissions.length>0
-                          ? activeAdmissions.map(a=><option key={a.value} value={a.value}>{a.label}</option>)
-                          : <option disabled>No active admissions found</option>}
-                      </select>
-                  : (f.key==="billingCleared" || f.key==="doctorApproved" || f.type==="booleanSelect" || f.key==="isActive")
-                    ? <select style={{width:"100%",padding:"8px 10px",border:"1.5px solid var(--hm-input-border)",borderRadius:8,fontSize:13,background:"var(--hm-input-bg)",color:"var(--hm-text)"}}
-                        value={form[f.key]===true?"true":form[f.key]===false?"false":""}
-                        onChange={e=>fi(f.key, e.target.value==="true" ? true : e.target.value==="false" ? false : null)}>
-                        <option value="">Select...</option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
-                      </select>
-                  : f.type==="select"
-                    ? <FS value={form[f.key]} onChange={e=>fi(f.key,e.target.value)}
-                        options={f.lookupType ? getValues(f.lookupType) : (f.options||[])}
-                        placeholder={f.placeholder}/>
-                  : f.type==="textarea"
-                    ? <FT value={form[f.key]} onChange={e=>fi(f.key,e.target.value)} placeholder={f.placeholder} rows={f.rows}/>
-                  : f.autoGen
-                    ? <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                        <input className="form-input" readOnly value={form[f.key]||"(Auto-generated by server)"} style={{background:"var(--hm-sec-hdr)",color:"var(--hm-text-muted)",cursor:"default",fontFamily:"'DM Mono',monospace",fontSize:12}}/>
-                        <span title="Auto-generated" style={{fontSize:14,flexShrink:0}}>🔒</span>
-                      </div>
-                  : f.type==="number"
-                    ? <FI type="number" name={f.key} value={form[f.key]??""} onChange={e=>fi(f.key,e.target.value===""?null:Number(e.target.value))} placeholder={f.placeholder}/>
-                  : <FI type={f.type||"text"} name={f.key} value={form[f.key]??""} maxLength={f.maxLength}
-                      onChange={e=>{
-                        let v = e.target.value;
-                        if (f.digitsOnly) v = v.replace(/\D/g,"");
-                        fi(f.key, v);
-                      }} placeholder={f.placeholder}/>
-                  }
-                </FG>
+        {title === "Prescription Management" ? (
+          <div style={{ display: "flex", gap: "24px", minHeight: "480px" }}>
+            {/* Left Column: Form Fields */}
+            <div style={{ flex: 1.2 }}>
+              {(formFields||[]).map((section,si)=>(
+                <div key={si}>
+                  {section.section && <div className="sec-divider">{section.section}</div>}
+                  <div className={`form-grid-${section.cols||2}`} style={{marginBottom:16}}>
+                    {(section.fields||[]).map(f=>(
+                      <FG key={f.key} label={f.label} req={f.req} error={f.req&&!form[f.key]&&saving?`${f.label} is required`:""}>
+                        {f.type==="hospitalSelect" || (f.key==="hospitalId" && hospitals.length>0)
+                          ? <select style={{width:"100%",padding:"8px 10px",border:"1.5px solid var(--hm-input-border)",borderRadius:8,fontSize:13,background:"var(--hm-input-bg)",color:"var(--hm-text)"}}
+                              value={form[f.key]||""} onChange={e=>fi(f.key,Number(e.target.value)||e.target.value)}>
+                              <option value="">— Select Hospital —</option>
+                              {hospitals.map(h=><option key={h.value} value={h.value}>{h.label}</option>)}
+                            </select>
+                        : f.type==="wardSelect"
+                          ? <select style={{width:"100%",padding:"8px 10px",border:"1.5px solid var(--hm-input-border)",borderRadius:8,fontSize:13,background:"var(--hm-input-bg)",color:"var(--hm-text)"}}
+                              value={form[f.key]||""} onChange={e=>{fi(f.key,Number(e.target.value)); fi("bedId","");}}>
+                              <option value="">— Select Ward —</option>
+                              {wards.length>0
+                                ? wards.map(w=><option key={w.value} value={w.value}>{w.label}</option>)
+                                : <option disabled>No wards found</option>}
+                            </select>
+                        : f.type==="bedSelect"
+                          ? <select style={{width:"100%",padding:"8px 10px",border:"1.5px solid var(--hm-input-border)",borderRadius:8,fontSize:13,background:"var(--hm-input-bg)",color:"var(--hm-text)"}}
+                              value={form[f.key]||""} onChange={e=>fi(f.key,Number(e.target.value))}>
+                              <option value="">— Select Bed —</option>
+                              {(form.wardId
+                                ? availableBeds.filter(b=>b.wardId===form.wardId)
+                                : availableBeds
+                              ).length>0
+                                ? (form.wardId ? availableBeds.filter(b=>b.wardId===form.wardId) : availableBeds)
+                                    .map(b=><option key={b.value} value={b.value}>{b.label}</option>)
+                                : <option disabled>{form.wardId ? "No available beds in this ward" : "Select a ward first"}</option>}
+                            </select>
+                        : f.type==="admissionSelect"
+                          ? <select style={{width:"100%",padding:"8px 10px",border:"1.5px solid var(--hm-input-border)",borderRadius:8,fontSize:13,background:"var(--hm-input-bg)",color:"var(--hm-text)"}}
+                              value={form[f.key]||""} onChange={e=>fi(f.key,Number(e.target.value))}>
+                              <option value="">— Select Active Admission —</option>
+                              {activeAdmissions.length>0
+                                ? activeAdmissions.map(a=><option key={a.value} value={a.value}>{a.label}</option>)
+                                : <option disabled>No active admissions found</option>}
+                            </select>
+                        : (f.key==="billingCleared" || f.key==="doctorApproved" || f.type==="booleanSelect" || f.key==="isActive")
+                          ? <select style={{width:"100%",padding:"8px 10px",border:"1.5px solid var(--hm-input-border)",borderRadius:8,fontSize:13,background:"var(--hm-input-bg)",color:"var(--hm-text)"}}
+                              value={form[f.key]===true?"true":form[f.key]===false?"false":""}
+                              onChange={e=>fi(f.key, e.target.value==="true" ? true : e.target.value==="false" ? false : null)}>
+                              <option value="">Select...</option>
+                              <option value="true">Yes</option>
+                              <option value="false">No</option>
+                            </select>
+                        : f.type==="select"
+                          ? <FS value={form[f.key]} onChange={e=>fi(f.key,e.target.value)}
+                              options={f.lookupType ? getValues(f.lookupType) : (f.options||[])}
+                              placeholder={f.placeholder}/>
+                        : f.type==="textarea"
+                          ? <FT value={form[f.key]} onChange={e=>fi(f.key,e.target.value)} placeholder={f.placeholder} rows={f.rows}/>
+                        : f.autoGen
+                          ? <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                              <input className="form-input" readOnly value={form[f.key]||"(Auto-generated by server)"} style={{background:"var(--hm-sec-hdr)",color:"var(--hm-text-muted)",cursor:"default",fontFamily:"'DM Mono',monospace",fontSize:12}}/>
+                              <span title="Auto-generated" style={{fontSize:14,flexShrink:0}}>🔒</span>
+                            </div>
+                        : f.type==="number"
+                          ? <FI type="number" name={f.key} value={form[f.key]??""} onChange={e=>fi(f.key,e.target.value===""?null:Number(e.target.value))} placeholder={f.placeholder}/>
+                        : <FI type={f.type||"text"} name={f.key} value={form[f.key]??""} maxLength={f.maxLength}
+                            onChange={e=>{
+                              let v = e.target.value;
+                              if (f.digitsOnly) v = v.replace(/\D/g,"");
+                              fi(f.key, v);
+                            }} placeholder={f.placeholder}/>
+                        }
+                      </FG>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
+
+            {/* Right Column: AI Medicine Recommendation */}
+            <div style={{ flex: 1, borderLeft: "1.5px solid var(--hm-divider)", paddingLeft: "24px" }}>
+              <AIMedicineRecommendation form={form} setForm={setForm} />
+            </div>
           </div>
-        ))}
+        ) : (
+          (formFields||[]).map((section,si)=>(
+            <div key={si}>
+              {section.section && <div className="sec-divider">{section.section}</div>}
+              <div className={`form-grid-${section.cols||2}`} style={{marginBottom:16}}>
+                {(section.fields||[]).map(f=>(
+                  <FG key={f.key} label={f.label} req={f.req} error={f.req&&!form[f.key]&&saving?`${f.label} is required`:""}>
+                    {f.type==="hospitalSelect" || (f.key==="hospitalId" && hospitals.length>0)
+                      ? <select style={{width:"100%",padding:"8px 10px",border:"1.5px solid var(--hm-input-border)",borderRadius:8,fontSize:13,background:"var(--hm-input-bg)",color:"var(--hm-text)"}}
+                          value={form[f.key]||""} onChange={e=>fi(f.key,Number(e.target.value)||e.target.value)}>
+                          <option value="">— Select Hospital —</option>
+                          {hospitals.map(h=><option key={h.value} value={h.value}>{h.label}</option>)}
+                        </select>
+                    : f.type==="wardSelect"
+                      ? <select style={{width:"100%",padding:"8px 10px",border:"1.5px solid var(--hm-input-border)",borderRadius:8,fontSize:13,background:"var(--hm-input-bg)",color:"var(--hm-text)"}}
+                          value={form[f.key]||""} onChange={e=>{fi(f.key,Number(e.target.value)); fi("bedId","");}}>
+                          <option value="">— Select Ward —</option>
+                          {wards.length>0
+                            ? wards.map(w=><option key={w.value} value={w.value}>{w.label}</option>)
+                            : <option disabled>No wards found</option>}
+                        </select>
+                    : f.type==="bedSelect"
+                      ? <select style={{width:"100%",padding:"8px 10px",border:"1.5px solid var(--hm-input-border)",borderRadius:8,fontSize:13,background:"var(--hm-input-bg)",color:"var(--hm-text)"}}
+                          value={form[f.key]||""} onChange={e=>fi(f.key,Number(e.target.value))}>
+                          <option value="">— Select Bed —</option>
+                          {(form.wardId
+                            ? availableBeds.filter(b=>b.wardId===form.wardId)
+                            : availableBeds
+                          ).length>0
+                            ? (form.wardId ? availableBeds.filter(b=>b.wardId===form.wardId) : availableBeds)
+                                .map(b=><option key={b.value} value={b.value}>{b.label}</option>)
+                            : <option disabled>{form.wardId ? "No available beds in this ward" : "Select a ward first"}</option>}
+                        </select>
+                    : f.type==="admissionSelect"
+                      ? <select style={{width:"100%",padding:"8px 10px",border:"1.5px solid var(--hm-input-border)",borderRadius:8,fontSize:13,background:"var(--hm-input-bg)",color:"var(--hm-text)"}}
+                          value={form[f.key]||""} onChange={e=>fi(f.key,Number(e.target.value))}>
+                          <option value="">— Select Active Admission —</option>
+                          {activeAdmissions.length>0
+                            ? activeAdmissions.map(a=><option key={a.value} value={a.value}>{a.label}</option>)
+                            : <option disabled>No active admissions found</option>}
+                        </select>
+                    : (f.key==="billingCleared" || f.key==="doctorApproved" || f.type==="booleanSelect" || f.key==="isActive")
+                      ? <select style={{width:"100%",padding:"8px 10px",border:"1.5px solid var(--hm-input-border)",borderRadius:8,fontSize:13,background:"var(--hm-input-bg)",color:"var(--hm-text)"}}
+                          value={form[f.key]===true?"true":form[f.key]===false?"false":""}
+                          onChange={e=>fi(f.key, e.target.value==="true" ? true : e.target.value==="false" ? false : null)}>
+                          <option value="">Select...</option>
+                          <option value="true">Yes</option>
+                          <option value="false">No</option>
+                        </select>
+                    : f.type==="select"
+                      ? <FS value={form[f.key]} onChange={e=>fi(f.key,e.target.value)}
+                          options={f.lookupType ? getValues(f.lookupType) : (f.options||[])}
+                          placeholder={f.placeholder}/>
+                    : f.type==="textarea"
+                      ? <FT value={form[f.key]} onChange={e=>fi(f.key,e.target.value)} placeholder={f.placeholder} rows={f.rows}/>
+                    : f.autoGen
+                      ? <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                          <input className="form-input" readOnly value={form[f.key]||"(Auto-generated by server)"} style={{background:"var(--hm-sec-hdr)",color:"var(--hm-text-muted)",cursor:"default",fontFamily:"'DM Mono',monospace",fontSize:12}}/>
+                          <span title="Auto-generated" style={{fontSize:14,flexShrink:0}}>🔒</span>
+                        </div>
+                    : f.type==="number"
+                      ? <FI type="number" name={f.key} value={form[f.key]??""} onChange={e=>fi(f.key,e.target.value===""?null:Number(e.target.value))} placeholder={f.placeholder}/>
+                    : <FI type={f.type||"text"} name={f.key} value={form[f.key]??""} maxLength={f.maxLength}
+                        onChange={e=>{
+                          let v = e.target.value;
+                          if (f.digitsOnly) v = v.replace(/\D/g,"");
+                          fi(f.key, v);
+                        }} placeholder={f.placeholder}/>
+                    }
+                  </FG>
+                ))}
+              </div>
+            </div>
+          ))
+        )}
       </Modal>
 
       <DeleteDialog open={!!delItem} onClose={()=>setDelItem(null)} onConfirm={handleDelete} itemName={delItem?.[columns[0]?.key]||"record"}/>

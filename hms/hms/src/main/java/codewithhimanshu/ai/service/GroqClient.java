@@ -94,4 +94,74 @@ public class GroqClient {
                    "}";
         }
     }
+
+    public String getChatCompletion(String systemPrompt, String userMessage) {
+        if (apiKey == null || apiKey.trim().isEmpty() || apiKey.startsWith("gsk_fake")) {
+            log.warn("Groq API key is missing or is placeholder. Returning mock response.");
+            return "{" +
+                   "\"recommendations\": [" +
+                   "  {\"medicine\": \"Paracetamol\", \"purpose\": \"Reduce fever\", \"dosage\": \"500mg - Twice daily - 3 days\", \"confidence\": 95}," +
+                   "  {\"medicine\": \"Cough Syrup\", \"purpose\": \"Relieve cough\", \"dosage\": \"10ml - Thrice daily - 5 days\", \"confidence\": 88}" +
+                   "]," +
+                   "\"warnings\": []," +
+                   "\"reasoning\": \"The patient presents with fever and cough. Paracetamol is recommended for fever control, and Cough Syrup for symptom relief. No allergies or interactions detected.\"" +
+                   "}";
+        }
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Authorization", "Bearer " + apiKey);
+
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("model", model);
+
+            List<Map<String, String>> messages = new ArrayList<>();
+
+            // System prompt
+            Map<String, String> sysMsg = new HashMap<>();
+            sysMsg.put("role", "system");
+            sysMsg.put("content", systemPrompt);
+            messages.add(sysMsg);
+
+            // User prompt
+            Map<String, String> userMsg = new HashMap<>();
+            userMsg.put("role", "user");
+            userMsg.put("content", userMessage);
+            messages.add(userMsg);
+
+            requestBody.put("messages", messages);
+
+            // Force JSON output
+            Map<String, String> responseFormat = new HashMap<>();
+            responseFormat.put("type", "json_object");
+            requestBody.put("response_format", responseFormat);
+
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+            log.info("Sending request to Groq with model: {}", model);
+            ResponseEntity<Map> response = restTemplate.postForEntity(GROQ_URL, entity, Map.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map body = response.getBody();
+                List choices = (List) body.get("choices");
+                if (choices != null && !choices.isEmpty()) {
+                    Map firstChoice = (Map) choices.get(0);
+                    Map message = (Map) firstChoice.get("message");
+                    if (message != null) {
+                        return (String) message.get("content");
+                    }
+                }
+            }
+            throw new RuntimeException("Empty or invalid response from Groq API");
+
+        } catch (Exception e) {
+            log.error("Error calling Groq API: {}", e.getMessage(), e);
+            return "{" +
+                   "\"recommendations\": []," +
+                   "\"warnings\": [{\"warning\": \"Error communicating with AI service: " + e.getMessage() + "\"}]," +
+                   "\"reasoning\": \"AI recommendation failed due to API communication error.\"" +
+                   "}";
+        }
+    }
 }

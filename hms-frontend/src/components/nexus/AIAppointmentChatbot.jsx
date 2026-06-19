@@ -5,10 +5,7 @@ import {
   Paper,
   Typography,
   TextField,
-  Chip,
-  Avatar,
   CircularProgress,
-  Button,
   Zoom,
   Slide,
 } from "@mui/material";
@@ -17,23 +14,43 @@ import CloseIcon from "@mui/icons-material/Close";
 import SendIcon from "@mui/icons-material/Send";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import SmartToyIcon from "@mui/icons-material/SmartToy";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import PersonIcon from "@mui/icons-material/Person";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 import environment from "../../config/environment";
 import { useTheme } from "../../hooks/useTheme";
 
-const G = {
-  accent: "#16a064",
-  accentDark: "#0d6b45",
-  accentLight: "#bbf7d0",
-  accentSoft: "#f0fdf4",
-  border: "#e2e8f0",
-  muted: "#64748b",
-  headerBg: "linear-gradient(135deg, #0d6b45 0%, #16a064 45%, #22c77a 80%)",
+/* ---------------------------------------------------------------------- */
+/*  Vantoor heritage tokens — navy / gold, matching the HMS brand system  */
+/* ---------------------------------------------------------------------- */
+const T = {
+  ink: "#0B1B2B",
+  inkSoft: "#13283D",
+  teal: "#0F3D3E",
+  gold: "#C9A24B",
+  goldSoft: "#E4C77E",
+  parchment: "#FAF7F1",
+  parchmentDeep: "#F1ECE0",
+  slate: "#5B6B7C",
+  danger: "#B5443A",
+  dangerSoft: "#F7E9E7",
+  info: "#2F5D8C",
+  infoSoft: "#E9F0F7",
+  headerGrad: "linear-gradient(135deg, #0B1B2B 0%, #13283D 55%, #0F3D3E 100%)",
+  fontDisplay: "'Cormorant Garamond', 'Georgia', serif",
+  fontBody: "'Plus Jakarta Sans', 'Inter', sans-serif",
+};
+
+const darkInk = {
+  panelBg: "#0E1A28",
+  msgBg: "#162739",
+  textPrimary: "#F2EEE3",
+  textSecondary: "#9FB0C0",
+  border: "#22384B",
+  inputBg: "#0B1722",
 };
 
 export default function AIAppointmentChatbot() {
@@ -45,7 +62,7 @@ export default function AIAppointmentChatbot() {
   const [loading, setLoading] = useState(false);
 
   const isHospitalRoute = location.pathname.startsWith("/hospital");
-// Maintain unique session ID in sessionStorage
+
   const [sessionId] = useState(() => {
     let id = sessionStorage.getItem("hms_chat_session_id");
     if (!id) {
@@ -56,25 +73,24 @@ export default function AIAppointmentChatbot() {
   });
 
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
 
-  // Load chat history from backend on mount
   useEffect(() => {
     axios
       .get(`${environment.backendUrl}/api/ai/history/${sessionId}`)
       .then((r) => {
         const history = r.data || [];
         if (history.length === 0) {
-          // Add default welcome message if history is empty
           setMessages([
             {
               sender: "bot",
-              reply: "Hello! I am your HMS AI Assistant. How can I help you today? You can describe symptoms, ask for doctor availability, book/cancel/reschedule appointments, or ask about hospital timings.",
+              reply:
+                "Welcome to Vantoor Care. I can help you check doctor availability, book, reschedule or cancel an appointment, describe symptoms, or share hospital timings. How may I assist you today?",
               action: "GENERAL_QUERY",
               data: {},
             },
           ]);
         } else {
-          // Map DB history model to frontend message structure
           const mapped = history.map((h) => {
             const isUser = h.action === "USER_MESSAGE";
             return {
@@ -92,7 +108,6 @@ export default function AIAppointmentChatbot() {
       });
   }, [sessionId]);
 
-  // Scroll to bottom when messages or open state change
   useEffect(() => {
     if (open) {
       setTimeout(() => {
@@ -101,25 +116,27 @@ export default function AIAppointmentChatbot() {
     }
   }, [messages, open, loading]);
 
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => inputRef.current?.focus(), 350);
+    }
+  }, [open]);
+
   const handleSend = async (textToSend) => {
     const text = textToSend || input;
     if (!text.trim()) return;
 
-    // If sent from text input, clear it
     if (!textToSend) setInput("");
 
-    // 1. Add user message locally
     setMessages((prev) => [...prev, { sender: "user", reply: text }]);
     setLoading(true);
 
     try {
-      // 2. Call backend AI chat API
       const r = await axios.post(`${environment.backendUrl}/api/ai/chat`, {
         message: text,
         sessionId: sessionId,
       });
 
-      // 3. Add bot reply locally
       setMessages((prev) => [
         ...prev,
         {
@@ -135,7 +152,8 @@ export default function AIAppointmentChatbot() {
         ...prev,
         {
           sender: "bot",
-          reply: "I'm having trouble connecting to the service. Please try again in a few moments.",
+          reply:
+            "I couldn't reach the care desk just now. Please try again in a moment.",
           action: "GENERAL_QUERY",
           data: {},
         },
@@ -145,110 +163,184 @@ export default function AIAppointmentChatbot() {
     }
   };
 
-  const handleChipClick = (msg) => {
-    handleSend(msg);
-  };
+  const handleChipClick = (msg) => handleSend(msg);
 
   const handleSlotClick = (slotTime, docName, dateStr) => {
-    // Automatically trigger booking flow by sending chat request
     const bookMsg = `Book slot ${slotTime} on ${dateStr} with ${docName}`;
     handleSend(bookMsg);
   };
 
   const suggestedChips = [
-    "Book Appointment",
-    "Available Doctors",
-    "I have fever",
-    "Reschedule Appointment",
-    "Hospital Timings",
+    { label: "Book Appointment", icon: <EventAvailableIcon sx={{ fontSize: 15 }} /> },
+    { label: "Available Doctors", icon: <PersonIcon sx={{ fontSize: 15 }} /> },
+    { label: "I have fever", icon: <AutoAwesomeIcon sx={{ fontSize: 15 }} /> },
+    { label: "Reschedule Appointment", icon: <SwapHorizIcon sx={{ fontSize: 15 }} /> },
+    { label: "Hospital Timings", icon: null },
   ];
 
+  // --- theme-derived surface colors -------------------------------------
+  const panelBg = isDark ? darkInk.panelBg : T.parchment;
+  const msgListBg = isDark ? "#0B1520" : T.parchmentDeep;
+  const botBubbleBg = isDark ? darkInk.msgBg : "#FFFFFF";
+  const botText = isDark ? darkInk.textPrimary : T.ink;
+  const borderCol = isDark ? darkInk.border : "#E6DFCF";
+
   return (
-    <Box sx={{ position: "fixed", bottom: 24, right: isHospitalRoute ? 140 : 24, zIndex: 9999 }}>
-      {/* Floating Action Button */}
+    <Box
+      sx={{
+        position: "fixed",
+        bottom: 24,
+        right: isHospitalRoute ? 140 : 24,
+        zIndex: 9999,
+        fontFamily: T.fontBody,
+      }}
+    >
+      {/* ---------------- Floating Action Button ---------------- */}
       <Zoom in={!open}>
         <IconButton
           onClick={() => setOpen(true)}
           sx={{
-            background: G.headerBg,
-            color: "#fff",
-            width: 56,
-            height: 56,
-            boxShadow: "0px 4px 20px rgba(22, 160, 100, 0.4)",
+            background: T.headerGrad,
+            color: T.goldSoft,
+            width: 58,
+            height: 58,
+            border: `1px solid rgba(201,162,75,0.45)`,
+            boxShadow: "0 8px 24px rgba(11,27,43,0.45)",
+            position: "relative",
             "&:hover": {
-              background: G.accentDark,
-              transform: "scale(1.08)",
+              transform: "translateY(-2px)",
+              boxShadow: "0 12px 30px rgba(11,27,43,0.55)",
             },
-            transition: "all 0.2s ease",
-            animation: "pulse 2.5s infinite alternate",
-            "@keyframes pulse": {
-              "0%": { boxShadow: "0 0 0 0 rgba(22, 160, 100, 0.4)" },
-              "100%": { boxShadow: "0 0 0 12px rgba(22, 160, 100, 0)" },
+            transition: "all 0.25s ease",
+            "&::after": {
+              content: '""',
+              position: "absolute",
+              inset: -4,
+              borderRadius: "50%",
+              border: `1px solid ${T.gold}`,
+              opacity: 0.35,
+              animation: "vantoorRing 2.8s ease-out infinite",
+            },
+            "@keyframes vantoorRing": {
+              "0%": { transform: "scale(0.85)", opacity: 0.45 },
+              "100%": { transform: "scale(1.35)", opacity: 0 },
             },
           }}
         >
-          <ChatIcon sx={{ fontSize: 28 }} />
+          <ChatIcon sx={{ fontSize: 26 }} />
         </IconButton>
       </Zoom>
 
-      {/* Chat Window */}
+      {/* ---------------- Chat Window ---------------- */}
       <Slide direction="up" in={open} mountOnEnter unmountOnExit>
         <Paper
+          elevation={0}
           sx={{
             position: "absolute",
             bottom: 0,
             right: 0,
-            width: { xs: "calc(100vw - 32px)", sm: 400 },
-            height: { xs: "75vh", sm: 550 },
-            maxHeight: 600,
-            borderRadius: 3,
+            width: { xs: "calc(100vw - 32px)", sm: 410 },
+            height: { xs: "78vh", sm: 580 },
+            maxHeight: 620,
+            borderRadius: "20px",
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
             boxShadow: isDark
-              ? "0px 10px 40px rgba(0,0,0,0.6)"
-              : "0px 10px 40px rgba(0,0,0,0.15)",
-            background: isDark ? "#1E293B" : "#fff",
-            border: isDark ? "1px solid #334155" : "1px solid #e2e8f0",
+              ? "0 24px 60px rgba(0,0,0,0.55)"
+              : "0 24px 60px rgba(11,27,43,0.22)",
+            background: panelBg,
+            border: `1px solid ${isDark ? "rgba(201,162,75,0.18)" : "rgba(11,27,43,0.08)"}`,
           }}
         >
-          {/* Header */}
+          {/* ---------- Header ---------- */}
           <Box
             sx={{
-              background: G.headerBg,
-              color: "#fff",
-              p: 2,
+              background: T.headerGrad,
+              color: T.parchment,
+              px: 2.5,
+              py: 2,
+              position: "relative",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
             }}
           >
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <Avatar
+              <Box
                 sx={{
-                  bgcolor: "rgba(255,255,255,0.25)",
-                  color: "#fff",
-                  width: 40,
-                  height: 40,
+                  width: 42,
+                  height: 42,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: `1.5px solid ${T.gold}`,
+                  background: "rgba(201,162,75,0.10)",
                 }}
               >
-                <SmartToyIcon />
-              </Avatar>
+                <AutoAwesomeIcon sx={{ color: T.goldSoft, fontSize: 20 }} />
+              </Box>
               <Box>
-                <Typography variant="subtitle1" fontWeight={700}>
-                  HMS Assistant
+                <Typography
+                  sx={{
+                    fontFamily: T.fontDisplay,
+                    fontSize: "1.32rem",
+                    fontWeight: 600,
+                    letterSpacing: 0.3,
+                    lineHeight: 1.1,
+                  }}
+                >
+                  Vantoor Care Desk
                 </Typography>
-                <Typography variant="caption" sx={{ opacity: 0.85 }}>
-                  Active Care Agent · Online
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.7, mt: 0.3 }}>
+                  <Box
+                    sx={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      bgcolor: "#5FCB8A",
+                      boxShadow: "0 0 0 0 rgba(95,203,138,0.6)",
+                      animation: "vantoorPulse 2s infinite",
+                      "@keyframes vantoorPulse": {
+                        "0%": { boxShadow: "0 0 0 0 rgba(95,203,138,0.55)" },
+                        "70%": { boxShadow: "0 0 0 5px rgba(95,203,138,0)" },
+                        "100%": { boxShadow: "0 0 0 0 rgba(95,203,138,0)" },
+                      },
+                    }}
+                  />
+                  <Typography
+                    variant="caption"
+                    sx={{ opacity: 0.75, fontSize: "0.72rem", letterSpacing: 0.4 }}
+                  >
+                    Assistant online
+                  </Typography>
+                </Box>
               </Box>
             </Box>
-            <IconButton onClick={() => setOpen(false)} sx={{ color: "#fff" }}>
-              <CloseIcon />
+            <IconButton
+              onClick={() => setOpen(false)}
+              size="small"
+              sx={{ color: T.parchment, opacity: 0.8, "&:hover": { opacity: 1 } }}
+            >
+              <CloseIcon fontSize="small" />
             </IconButton>
+
+            {/* gold hairline */}
+            <Box
+              sx={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: "1px",
+                background:
+                  "linear-gradient(90deg, transparent, rgba(201,162,75,0.65), transparent)",
+              }}
+            />
           </Box>
 
-          {/* Messages List Area */}
+          {/* ---------- Messages ---------- */}
           <Box
             sx={{
               flex: 1,
@@ -256,11 +348,11 @@ export default function AIAppointmentChatbot() {
               overflowY: "auto",
               display: "flex",
               flexDirection: "column",
-              gap: 2,
-              bgcolor: isDark ? "#0F172A" : "#f8fafc",
+              gap: 1.75,
+              bgcolor: msgListBg,
               "&::-webkit-scrollbar": { width: 5 },
               "&::-webkit-scrollbar-thumb": {
-                bgcolor: isDark ? "#334155" : "#cbd5e1",
+                bgcolor: isDark ? "#28415A" : "#D9CDA9",
                 borderRadius: 3,
               },
             }}
@@ -274,266 +366,240 @@ export default function AIAppointmentChatbot() {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: isUser ? "flex-end" : "flex-start",
-                    maxWidth: "90%",
+                    maxWidth: "92%",
                     alignSelf: isUser ? "flex-end" : "flex-start",
                   }}
                 >
                   <Box
                     sx={{
                       display: "flex",
-                      alignItems: "flex-start",
-                      gap: 1,
+                      alignItems: "flex-end",
+                      gap: 0.9,
                       flexDirection: isUser ? "row-reverse" : "row",
                     }}
                   >
-                    <Avatar
-                      sx={{
-                        width: 28,
-                        height: 28,
-                        bgcolor: isUser
-                          ? "#3b82f6"
-                          : "rgba(22, 160, 100, 0.15)",
-                        color: isUser ? "#fff" : G.accent,
-                        fontSize: 14,
-                      }}
-                    >
-                      {isUser ? <AccountCircleIcon /> : <SmartToyIcon sx={{ fontSize: 18 }} />}
-                    </Avatar>
+                    {!isUser && (
+                      <Box
+                        sx={{
+                          width: 26,
+                          height: 26,
+                          borderRadius: "50%",
+                          flexShrink: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: T.headerGrad,
+                          border: `1px solid ${T.gold}`,
+                        }}
+                      >
+                        <AutoAwesomeIcon sx={{ fontSize: 13, color: T.goldSoft }} />
+                      </Box>
+                    )}
 
                     <Box
                       sx={{
-                        p: 1.5,
+                        py: 1.1,
+                        px: 1.6,
                         borderRadius: isUser
-                          ? "18px 18px 0px 18px"
-                          : "18px 18px 18px 0px",
-                        bgcolor: isUser
-                          ? "#3b82f6"
-                          : isDark
-                          ? "#1E293B"
-                          : "#fff",
-                        color: isUser ? "#fff" : isDark ? "#F1F5F9" : "#1E293B",
+                          ? "16px 16px 4px 16px"
+                          : "16px 16px 16px 4px",
+                        bgcolor: isUser ? T.ink : botBubbleBg,
+                        color: isUser ? T.parchment : botText,
                         boxShadow: isDark
-                          ? "0 2px 8px rgba(0,0,0,0.4)"
-                          : "0 2px 8px rgba(0,0,0,0.06)",
-                        fontSize: "0.92rem",
-                        lineHeight: 1.4,
+                          ? "0 2px 10px rgba(0,0,0,0.35)"
+                          : "0 2px 10px rgba(11,27,43,0.08)",
+                        border: isUser
+                          ? "1px solid rgba(201,162,75,0.35)"
+                          : `1px solid ${borderCol}`,
+                        fontSize: "0.91rem",
+                        lineHeight: 1.5,
                       }}
                     >
                       {m.reply}
                     </Box>
                   </Box>
 
-                  {/* Render Custom Action Cards */}
+                  {/* ----- Slot card — styled as an appointment ticket ----- */}
                   {!isUser && m.action === "CHECK_SLOTS" && m.data?.slots && (
                     <Box
                       sx={{
-                        mt: 1.5,
-                        ml: 4,
-                        p: 2,
-                        borderRadius: 2,
-                        bgcolor: isDark ? "#1E293B" : "#fff",
-                        border: `1px solid ${isDark ? "#334155" : G.border}`,
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                        maxWidth: 320,
+                        mt: 1.2,
+                        ml: 4.3,
+                        borderRadius: "12px",
+                        bgcolor: isDark ? darkInk.msgBg : "#FFFFFF",
+                        border: `1px solid ${borderCol}`,
+                        borderLeft: `3px solid ${T.gold}`,
+                        boxShadow: isDark
+                          ? "0 4px 14px rgba(0,0,0,0.3)"
+                          : "0 4px 14px rgba(11,27,43,0.08)",
+                        maxWidth: 300,
+                        overflow: "hidden",
                       }}
                     >
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-                        <CalendarTodayIcon sx={{ color: G.accent, fontSize: 18 }} />
-                        <Typography variant="subtitle2" fontWeight={700}>
+                      <Box sx={{ p: 1.6, pb: 1.2 }}>
+                        <Typography
+                          sx={{
+                            fontFamily: T.fontDisplay,
+                            fontWeight: 600,
+                            fontSize: "1.05rem",
+                            color: isDark ? T.parchment : T.ink,
+                          }}
+                        >
                           {m.data.doctorName}
                         </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: isDark ? darkInk.textSecondary : T.slate, display: "block" }}
+                        >
+                          {m.data.specialization} · {m.data.date}
+                        </Typography>
                       </Box>
-                      <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
-                        Specialization: {m.data.specialization} <br />
-                        Date: {m.data.date}
-                      </Typography>
 
-                      <Typography variant="caption" fontWeight={600} display="block" mb={1}>
-                        Available Slots:
-                      </Typography>
-                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.8 }}>
+                      <Box
+                        sx={{
+                          borderTop: `1px dashed ${isDark ? "#2C4760" : "#DCD2B5"}`,
+                          p: 1.4,
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 0.7,
+                        }}
+                      >
                         {m.data.slots.length === 0 ? (
-                          <Typography variant="caption" color="error">
-                            No slots available. Try another day.
+                          <Typography variant="caption" sx={{ color: T.danger }}>
+                            No slots available — try another day.
                           </Typography>
                         ) : (
                           m.data.slots.map((sTime) => (
-                            <Chip
+                            <Box
                               key={sTime}
-                              label={sTime}
                               onClick={() =>
-                                handleSlotClick(
-                                  sTime,
-                                  m.data.doctorName,
-                                  m.data.date
-                                )
+                                handleSlotClick(sTime, m.data.doctorName, m.data.date)
                               }
-                              variant="outlined"
-                              size="small"
                               sx={{
-                                color: G.accent,
-                                borderColor: G.accent,
-                                fontWeight: 600,
+                                px: 1.3,
+                                py: 0.5,
+                                borderRadius: "999px",
+                                border: `1px solid ${T.gold}`,
+                                color: isDark ? T.goldSoft : T.teal,
+                                fontSize: "0.78rem",
+                                fontWeight: 700,
                                 cursor: "pointer",
+                                letterSpacing: 0.2,
+                                transition: "all 0.15s ease",
                                 "&:hover": {
-                                  bgcolor: G.accentSoft,
-                                  color: G.accentDark,
+                                  bgcolor: T.gold,
+                                  color: T.ink,
                                 },
                               }}
-                            />
+                            >
+                              {sTime}
+                            </Box>
                           ))
                         )}
                       </Box>
                     </Box>
                   )}
 
+                  {/* ----- Booking confirmed ----- */}
                   {!isUser && m.action === "BOOK_APPOINTMENT" && m.data?.appointmentNumber && (
-                    <Box
-                      sx={{
-                        mt: 1.5,
-                        ml: 4,
-                        p: 2,
-                        borderRadius: 2,
-                        bgcolor: isDark ? "rgba(22, 160, 100, 0.15)" : G.accentSoft,
-                        border: `1px solid ${isDark ? "rgba(22, 160, 100, 0.3)" : G.accentLight}`,
-                        display: "flex",
-                        gap: 1.5,
-                        maxWidth: 320,
-                      }}
-                    >
-                      <CheckCircleIcon sx={{ color: G.accent, mt: 0.2 }} />
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight={700} color={isDark ? "#4ade80" : G.accentDark}>
-                          Booking Confirmed!
-                        </Typography>
-                        <Box sx={{ mt: 0.5, fontSize: "0.8rem", color: isDark ? "#cbd5e1" : "#475569" }}>
-                          <div><strong>Ref:</strong> {m.data.appointmentNumber}</div>
-                          <div><strong>Doctor:</strong> {m.data.doctorName}</div>
-                          <div><strong>Date:</strong> {m.data.date}</div>
-                          <div><strong>Time:</strong> {m.data.startTime}</div>
-                          <div><strong>Status:</strong> {m.data.status}</div>
-                        </Box>
-                      </Box>
-                    </Box>
+                    <StatusCard
+                      isDark={isDark}
+                      tone="success"
+                      icon={<CheckCircleIcon sx={{ fontSize: 19 }} />}
+                      title="Booking confirmed"
+                      rows={[
+                        ["Ref", m.data.appointmentNumber],
+                        ["Doctor", m.data.doctorName],
+                        ["Date", m.data.date],
+                        ["Time", m.data.startTime],
+                        ["Status", m.data.status],
+                      ]}
+                    />
                   )}
 
+                  {/* ----- Cancelled ----- */}
                   {!isUser && m.action === "CANCEL_APPOINTMENT" && m.data?.appointmentNumber && (
-                    <Box
-                      sx={{
-                        mt: 1.5,
-                        ml: 4,
-                        p: 2,
-                        borderRadius: 2,
-                        bgcolor: isDark ? "rgba(239, 68, 68, 0.15)" : "#fef2f2",
-                        border: `1px solid ${isDark ? "rgba(239, 68, 68, 0.3)" : "#fecaca"}`,
-                        display: "flex",
-                        gap: 1.5,
-                        maxWidth: 320,
-                      }}
-                    >
-                      <CancelIcon sx={{ color: "#ef4444", mt: 0.2 }} />
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight={700} color={isDark ? "#f87171" : "#b91c1c"}>
-                          Appointment Cancelled
-                        </Typography>
-                        <Box sx={{ mt: 0.5, fontSize: "0.8rem", color: isDark ? "#cbd5e1" : "#475569" }}>
-                          <div><strong>Ref:</strong> {m.data.appointmentNumber}</div>
-                          <div><strong>Status:</strong> CANCELLED</div>
-                        </Box>
-                      </Box>
-                    </Box>
+                    <StatusCard
+                      isDark={isDark}
+                      tone="danger"
+                      icon={<CancelIcon sx={{ fontSize: 19 }} />}
+                      title="Appointment cancelled"
+                      rows={[
+                        ["Ref", m.data.appointmentNumber],
+                        ["Status", "CANCELLED"],
+                      ]}
+                    />
                   )}
 
+                  {/* ----- Rescheduled ----- */}
                   {!isUser && m.action === "RESCHEDULE_APPOINTMENT" && m.data?.appointmentNumber && (
-                    <Box
-                      sx={{
-                        mt: 1.5,
-                        ml: 4,
-                        p: 2,
-                        borderRadius: 2,
-                        bgcolor: isDark ? "rgba(59, 130, 246, 0.15)" : "#eff6ff",
-                        border: `1px solid ${isDark ? "rgba(59, 130, 246, 0.3)" : "#bfdbfe"}`,
-                        display: "flex",
-                        gap: 1.5,
-                        maxWidth: 320,
-                      }}
-                    >
-                      <CheckCircleIcon sx={{ color: "#3b82f6", mt: 0.2 }} />
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight={700} color={isDark ? "#60a5fa" : "#1d4ed8"}>
-                          Rescheduled Successfully!
-                        </Typography>
-                        <Box sx={{ mt: 0.5, fontSize: "0.8rem", color: isDark ? "#cbd5e1" : "#475569" }}>
-                          <div><strong>New Ref:</strong> {m.data.appointmentNumber}</div>
-                          {m.data.oldAppointmentNumber && (
-                            <div><strong>Old Ref:</strong> {m.data.oldAppointmentNumber} (Cancelled)</div>
-                          )}
-                          <div><strong>New Date:</strong> {m.data.date}</div>
-                          <div><strong>New Time:</strong> {m.data.startTime}</div>
-                          <div><strong>Status:</strong> {m.data.status}</div>
-                        </Box>
-                      </Box>
-                    </Box>
+                    <StatusCard
+                      isDark={isDark}
+                      tone="info"
+                      icon={<SwapHorizIcon sx={{ fontSize: 19 }} />}
+                      title="Rescheduled successfully"
+                      rows={[
+                        ["New ref", m.data.appointmentNumber],
+                        ...(m.data.oldAppointmentNumber
+                          ? [["Old ref", `${m.data.oldAppointmentNumber} (cancelled)`]]
+                          : []),
+                        ["New date", m.data.date],
+                        ["New time", m.data.startTime],
+                        ["Status", m.data.status],
+                      ]}
+                    />
                   )}
                 </Box>
               );
             })}
 
-            {/* Bouncing Typing Indicator */}
+            {/* ----- Typing indicator ----- */}
             {loading && (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, ml: 1 }}>
-                <Avatar
-                  sx={{
-                    width: 28,
-                    height: 28,
-                    bgcolor: "rgba(22, 160, 100, 0.15)",
-                    color: G.accent,
-                  }}
-                >
-                  <SmartToyIcon sx={{ fontSize: 18 }} />
-                </Avatar>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.9 }}>
                 <Box
                   sx={{
-                    p: 1.5,
-                    borderRadius: "18px 18px 18px 0px",
-                    bgcolor: isDark ? "#1E293B" : "#fff",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                    width: 26,
+                    height: 26,
+                    borderRadius: "50%",
+                    flexShrink: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: T.headerGrad,
+                    border: `1px solid ${T.gold}`,
+                  }}
+                >
+                  <AutoAwesomeIcon sx={{ fontSize: 13, color: T.goldSoft }} />
+                </Box>
+                <Box
+                  sx={{
+                    py: 1.1,
+                    px: 1.6,
+                    borderRadius: "16px 16px 16px 4px",
+                    bgcolor: botBubbleBg,
+                    border: `1px solid ${borderCol}`,
                     display: "flex",
                     alignItems: "center",
                     gap: 0.5,
                   }}
                 >
-                  <Box
-                    sx={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      bgcolor: G.accent,
-                      animation: "bounce 1.4s infinite ease-in-out both",
-                      "@keyframes bounce": {
-                        "0%, 80%, 100%": { transform: "scale(0)" },
-                        "40%": { transform: "scale(1)" },
-                      },
-                    }}
-                  />
-                  <Box
-                    sx={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      bgcolor: G.accent,
-                      animation: "bounce 1.4s infinite ease-in-out both 0.2s",
-                    }}
-                  />
-                  <Box
-                    sx={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      bgcolor: G.accent,
-                      animation: "bounce 1.4s infinite ease-in-out both 0.4s",
-                    }}
-                  />
+                  {[0, 0.18, 0.36].map((delay, i) => (
+                    <Box
+                      key={i}
+                      sx={{
+                        width: 5,
+                        height: 5,
+                        borderRadius: "50%",
+                        bgcolor: T.gold,
+                        animation: `vantoorDot 1.3s infinite ease-in-out both`,
+                        animationDelay: `${delay}s`,
+                        "@keyframes vantoorDot": {
+                          "0%, 80%, 100%": { transform: "scale(0.4)", opacity: 0.4 },
+                          "40%": { transform: "scale(1)", opacity: 1 },
+                        },
+                      }}
+                    />
+                  ))}
                 </Box>
               </Box>
             )}
@@ -541,60 +607,66 @@ export default function AIAppointmentChatbot() {
             <div ref={messagesEndRef} />
           </Box>
 
-          {/* Quick Suggestions Chips Area */}
+          {/* ---------- Suggestions ---------- */}
           <Box
             sx={{
-              p: 1.2,
+              px: 1.4,
+              py: 1.1,
               display: "flex",
-              gap: 0.8,
+              gap: 0.7,
               overflowX: "auto",
-              bgcolor: isDark ? "#1E293B" : "#f1f5f9",
-              borderTop: isDark ? "1px solid #334155" : "1px solid #e2e8f0",
-              "&::-webkit-scrollbar": { height: 4 },
-              "&::-webkit-scrollbar-thumb": {
-                bgcolor: isDark ? "#475569" : "#cbd5e1",
-                borderRadius: 2,
-              },
+              bgcolor: isDark ? darkInk.panelBg : "#FFFFFF",
+              borderTop: `1px solid ${borderCol}`,
+              "&::-webkit-scrollbar": { height: 0 },
             }}
           >
-            {suggestedChips.map((chipText) => (
-              <Chip
-                key={chipText}
-                label={chipText}
-                onClick={() => handleChipClick(chipText)}
-                size="small"
+            {suggestedChips.map((chip) => (
+              <Box
+                key={chip.label}
+                onClick={() => handleChipClick(chip.label)}
                 sx={{
-                  bgcolor: isDark ? "#334155" : "#fff",
-                  color: isDark ? "#E2E8F0" : G.accentDark,
-                  border: isDark ? "1px solid #475569" : `1px solid ${G.border}`,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                  px: 1.3,
+                  py: 0.65,
+                  borderRadius: "999px",
+                  border: `1px solid ${isDark ? "#2C4760" : "#E1D8BD"}`,
+                  color: isDark ? darkInk.textPrimary : T.ink,
+                  fontSize: "0.78rem",
                   fontWeight: 600,
-                  cursor: "pointer",
                   whiteSpace: "nowrap",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
                   "&:hover": {
-                    bgcolor: G.accentSoft,
-                    borderColor: G.accent,
-                    color: G.accentDark,
+                    bgcolor: T.gold,
+                    borderColor: T.gold,
+                    color: T.ink,
                   },
                 }}
-              />
+              >
+                {chip.icon}
+                {chip.label}
+              </Box>
             ))}
           </Box>
 
-          {/* Input Box Area */}
+          {/* ---------- Input ---------- */}
           <Box
             sx={{
-              p: 1.5,
+              p: 1.4,
               display: "flex",
               alignItems: "center",
               gap: 1,
-              bgcolor: isDark ? "#1E293B" : "#fff",
-              borderTop: isDark ? "1px solid #334155" : "1px solid #e2e8f0",
+              bgcolor: isDark ? darkInk.panelBg : "#FFFFFF",
+              borderTop: `1px solid ${borderCol}`,
             }}
           >
             <TextField
+              inputRef={inputRef}
               fullWidth
               size="small"
-              placeholder="Ask me anything..."
+              placeholder="Type your question…"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
@@ -603,21 +675,16 @@ export default function AIAppointmentChatbot() {
               disabled={loading}
               sx={{
                 "& .MuiOutlinedInput-root": {
-                  borderRadius: 2.5,
-                  bgcolor: isDark ? "#0F172A" : "#f8fafc",
-                  "& fieldset": {
-                    borderColor: isDark ? "#334155" : "#cbd5e1",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: G.accent,
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: G.accent,
-                  },
+                  borderRadius: "999px",
+                  bgcolor: isDark ? darkInk.inputBg : T.parchmentDeep,
+                  "& fieldset": { borderColor: isDark ? "#2C4760" : "#E1D8BD" },
+                  "&:hover fieldset": { borderColor: T.gold },
+                  "&.Mui-focused fieldset": { borderColor: T.gold, borderWidth: 1.5 },
                 },
                 "& .MuiInputBase-input": {
-                  fontSize: "0.92rem",
-                  color: isDark ? "#F8FAFC" : "#1E293B",
+                  fontSize: "0.9rem",
+                  color: isDark ? darkInk.textPrimary : T.ink,
+                  py: 1.05,
                 },
               }}
             />
@@ -625,28 +692,86 @@ export default function AIAppointmentChatbot() {
               onClick={() => handleSend()}
               disabled={loading || !input.trim()}
               sx={{
-                bgcolor: G.accent,
-                color: "#fff",
-                "&:hover": {
-                  bgcolor: G.accentDark,
-                },
+                background: T.headerGrad,
+                color: T.goldSoft,
+                width: 40,
+                height: 40,
+                "&:hover": { filter: "brightness(1.15)" },
                 "&.Mui-disabled": {
-                  bgcolor: isDark ? "#334155" : "#e2e8f0",
-                  color: isDark ? "#475569" : "#cbd5e1",
+                  background: isDark ? "#1C2E40" : "#E6DFCF",
+                  color: isDark ? "#3E5670" : "#B8AC8A",
                 },
-                borderRadius: 2.5,
-                p: 1,
               }}
             >
               {loading ? (
-                <CircularProgress size={20} color="inherit" />
+                <CircularProgress size={18} sx={{ color: "inherit" }} />
               ) : (
-                <SendIcon sx={{ fontSize: 20 }} />
+                <SendIcon sx={{ fontSize: 18 }} />
               )}
             </IconButton>
           </Box>
         </Paper>
       </Slide>
+    </Box>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Shared status card for booking / cancel / reschedule confirmations */
+/* ------------------------------------------------------------------ */
+function StatusCard({ isDark, tone, icon, title, rows }) {
+  const palette = {
+    success: { accent: "#3E8E5C", bgLight: "#EEF6EF", bgDark: "rgba(62,142,92,0.14)" },
+    danger: { accent: T.danger, bgLight: T.dangerSoft, bgDark: "rgba(181,68,58,0.14)" },
+    info: { accent: T.info, bgLight: T.infoSoft, bgDark: "rgba(47,93,140,0.14)" },
+  }[tone];
+
+  return (
+    <Box
+      sx={{
+        mt: 1.2,
+        ml: 4.3,
+        borderRadius: "12px",
+        bgcolor: isDark ? palette.bgDark : palette.bgLight,
+        border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"}`,
+        borderLeft: `3px solid ${palette.accent}`,
+        p: 1.6,
+        display: "flex",
+        gap: 1.2,
+        maxWidth: 300,
+      }}
+    >
+      <Box sx={{ color: palette.accent, mt: 0.1 }}>{icon}</Box>
+      <Box sx={{ flex: 1 }}>
+        <Typography
+          sx={{
+            fontFamily: T.fontDisplay,
+            fontWeight: 600,
+            fontSize: "1rem",
+            color: palette.accent,
+            mb: 0.4,
+          }}
+        >
+          {title}
+        </Typography>
+        {rows.map(([label, val]) => (
+          <Box
+            key={label}
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: "0.78rem",
+              color: isDark ? darkInk.textSecondary : T.slate,
+              py: 0.2,
+            }}
+          >
+            <span>{label}</span>
+            <span style={{ fontWeight: 600, color: isDark ? darkInk.textPrimary : T.ink }}>
+              {val}
+            </span>
+          </Box>
+        ))}
+      </Box>
     </Box>
   );
 }
