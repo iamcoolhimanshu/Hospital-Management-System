@@ -5,6 +5,7 @@ import { useAuth } from "../../hooks/useAuth";
 const NAV = [
   { key: "dashboard", icon: "📊", label: "Dashboard" },
   { key: "appointment", icon: "📅", label: "Appointments" },
+  { key: "communication", icon: "💬", label: "Communication Hub" },
   { key: "hospitals", icon: "🏥", label: "Hospitals" },
   { key: "departments", icon: "🏢", label: "Departments" },
   { key: "staff", icon: "👥", label: "Staff" },
@@ -29,7 +30,7 @@ const NAV = [
 ];
 
 const SECTIONS = [
-  { label: "Overview", keys: ["dashboard", "appointment"] },
+  { label: "Overview", keys: ["dashboard", "appointment", "communication"] },
   { label: "Hospital", keys: ["hospitals", "departments", "staff", "doctors"] },
   { label: "Patients", keys: ["patients", "wards", "ipd", "opd", "prescription", "lab", "pharmacy", "emergency", "ot", "nursing", "discharge"] },
   { label: "Finance", keys: ["billing", "insurance", "advancepay"] },
@@ -45,6 +46,7 @@ const ROLE_MENUS = {
   ROLE_DOCTOR: [
     "dashboard",
     "appointment",
+    "communication",
     "patients", "ipd", "opd", "prescription",
     "lab", "discharge", "ot", "nursing",
   ],
@@ -52,6 +54,7 @@ const ROLE_MENUS = {
   ROLE_RECEPTIONIST: [
     "dashboard",
     "appointment",
+    "communication",
     "patients", "ipd", "opd",
     "billing", "advancepay",
     "emergency",
@@ -59,6 +62,7 @@ const ROLE_MENUS = {
 
   ROLE_BILLING_EXECUTIVE: [
     "dashboard",
+    "communication",
     "patients",
     "billing", "insurance", "advancepay",
     "reports",
@@ -66,12 +70,14 @@ const ROLE_MENUS = {
 
   ROLE_WARD_MANAGER: [
     "dashboard",
+    "communication",
     "patients", "wards", "ipd",
     "nursing", "discharge",
   ],
 
   ROLE_FINANCE_ADMIN: [
     "dashboard",
+    "communication",
     "billing", "insurance", "advancepay",
     "reports",
   ],

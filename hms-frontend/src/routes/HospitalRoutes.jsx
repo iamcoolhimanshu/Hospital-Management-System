@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import HospitalManagement, { CrudTab, TAB_CONFIG_MAP } from "../pages/HospitalManagement/Hospitalmanagement";
 import DashboardPage from "../pages/HospitalManagement/Dashboard";
 import AppointmentManagement from "../pages/HospitalManagement/appointment/AppointmentManagement";
+import CommunicationDashboard from "../pages/communication/CommunicationDashboard";
 
 function LoadingScreen() {
   return (
@@ -42,6 +43,15 @@ export default function HospitalRoutes() {
     return (
       <Suspense fallback={<LoadingScreen />}>
         <AppointmentManagement />
+      </Suspense>
+    );
+  }
+
+  // communication → Communication Hub dashboard
+  if (tab === "communication") {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <CommunicationDashboard />
       </Suspense>
     );
   }
