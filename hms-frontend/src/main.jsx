@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import "./global.css";
 
 // Reset browser defaults
 const globalStyle = document.createElement("style");

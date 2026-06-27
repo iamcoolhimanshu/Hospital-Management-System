@@ -4,6 +4,7 @@ import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import { useTheme } from "../../hooks/useTheme";
 import NexusAssistant from "../nexus/NexusAssistant";
+import AIVoiceAssistant from "../nexus/AIVoiceAssistant";
 
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -65,7 +66,7 @@ export default function AppLayout() {
     <div style={{
       display: "flex",
       minHeight: "100vh",
-      background: isDark ? "#0A1628" : "#F0F4FA",
+      background: isDark ? "#0A1628" : "#EEF2F7",
       transition: "background 0.25s ease",
     }}>
       {/* Fixed Topbar spans full width */}
@@ -89,14 +90,15 @@ export default function AppLayout() {
         display: "flex",
         flexDirection: "column",
         paddingTop: 56,
-        background: isDark ? "#0A1628" : "#F0F4FA",
+        background: isDark ? "#0A1628" : "#EEF2F7",
         transition: "background 0.25s ease",
       }}>
         <Outlet />
       </main>
 
-      {/* ── Nexus AI Assistant (floating) ── */}
+      {/* ── Nexus AI Assistant & Jarvis AI Voice Assistant (floating) ── */}
       <NexusAssistant />
+      <AIVoiceAssistant />
 
       {/* Hidden Google Translate widget container (required by the script) */}
       <div id="google_translate_element" style={{ display: "none" }} />
