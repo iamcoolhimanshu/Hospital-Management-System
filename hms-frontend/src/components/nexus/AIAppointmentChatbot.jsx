@@ -53,10 +53,21 @@ const darkInk = {
   inputBg: "#0B1722",
 };
 
-export default function AIAppointmentChatbot() {
+export default function AIAppointmentChatbot({ isOpen: externalIsOpen, onClose: externalOnClose, hideTrigger = false }) {
   const { isDark } = useTheme();
   const location = useLocation();
-  const [open, setOpen] = useState(false);
+
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = typeof externalIsOpen !== "undefined";
+  const open = isControlled ? externalIsOpen : internalOpen;
+  const setOpen = (val) => {
+    if (isControlled) {
+      if (!val && externalOnClose) externalOnClose();
+    } else {
+      setInternalOpen(val);
+    }
+  };
+
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -196,52 +207,54 @@ export default function AIAppointmentChatbot() {
       }}
     >
       {/* ---------------- Floating Action Button ---------------- */}
-      <Zoom in={!open}>
-        <IconButton
-          onClick={() => setOpen(true)}
-          sx={{
-            background: T.headerGrad,
-            color: T.goldSoft,
-            width: 58,
-            height: 58,
-            border: `1px solid rgba(201,162,75,0.45)`,
-            boxShadow: "0 8px 24px rgba(11,27,43,0.45)",
-            position: "relative",
-            "&:hover": {
-              transform: "translateY(-2px)",
-              boxShadow: "0 12px 30px rgba(11,27,43,0.55)",
-            },
-            transition: "all 0.25s ease",
-            "&::after": {
-              content: '""',
-              position: "absolute",
-              inset: -4,
-              borderRadius: "50%",
-              border: `1px solid ${T.gold}`,
-              opacity: 0.35,
-              animation: "vantoorRing 2.8s ease-out infinite",
-            },
-            "@keyframes vantoorRing": {
-              "0%": { transform: "scale(0.85)", opacity: 0.45 },
-              "100%": { transform: "scale(1.35)", opacity: 0 },
-            },
-          }}
-        >
-          <ChatIcon sx={{ fontSize: 26 }} />
-        </IconButton>
-      </Zoom>
+      {!hideTrigger && (
+        <Zoom in={!open}>
+          <IconButton
+            onClick={() => setOpen(true)}
+            sx={{
+              background: T.headerGrad,
+              color: T.goldSoft,
+              width: 58,
+              height: 58,
+              border: `1px solid rgba(201,162,75,0.45)`,
+              boxShadow: "0 8px 24px rgba(11,27,43,0.45)",
+              position: "relative",
+              "&:hover": {
+                transform: "translateY(-2px)",
+                boxShadow: "0 12px 30px rgba(11,27,43,0.55)",
+              },
+              transition: "all 0.25s ease",
+              "&::after": {
+                content: '""',
+                position: "absolute",
+                inset: -4,
+                borderRadius: "50%",
+                border: `1px solid ${T.gold}`,
+                opacity: 0.35,
+                animation: "vantoorRing 2.8s ease-out infinite",
+              },
+              "@keyframes vantoorRing": {
+                "0%": { transform: "scale(0.85)", opacity: 0.45 },
+                "100%": { transform: "scale(1.35)", opacity: 0 },
+              },
+            }}
+          >
+            <ChatIcon sx={{ fontSize: 26 }} />
+          </IconButton>
+        </Zoom>
+      )}
 
       {/* ---------------- Chat Window ---------------- */}
       <Slide direction="up" in={open} mountOnEnter unmountOnExit>
         <Paper
           elevation={0}
           sx={{
-            position: "absolute",
-            bottom: 0,
-            right: 0,
-            width: { xs: "calc(100vw - 32px)", sm: 410 },
-            height: { xs: "78vh", sm: 580 },
-            maxHeight: 620,
+            position: "fixed",
+            bottom: 96,
+            right: { xs: 16, sm: 28 },
+            width: { xs: "calc(100vw - 32px)", sm: 420 },
+            height: { xs: "calc(100vh - 120px)", sm: 580 },
+            maxHeight: "calc(100vh - 120px)",
             borderRadius: "20px",
             overflow: "hidden",
             display: "flex",

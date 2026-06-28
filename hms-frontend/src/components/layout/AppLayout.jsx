@@ -3,8 +3,7 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import { useTheme } from "../../hooks/useTheme";
-import NexusAssistant from "../nexus/NexusAssistant";
-import AIVoiceAssistant from "../nexus/AIVoiceAssistant";
+import MasterAIDock from "../nexus/MasterAIDock";
 
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -96,9 +95,8 @@ export default function AppLayout() {
         <Outlet />
       </main>
 
-      {/* ── Nexus AI Assistant & Jarvis AI Voice Assistant (floating) ── */}
-      <NexusAssistant />
-      <AIVoiceAssistant />
+      {/* ── Unified Master AI Floating Control Center ── */}
+      <MasterAIDock />
 
       {/* Hidden Google Translate widget container (required by the script) */}
       <div id="google_translate_element" style={{ display: "none" }} />

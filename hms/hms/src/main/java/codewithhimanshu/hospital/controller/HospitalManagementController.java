@@ -43,20 +43,20 @@ public class HospitalManagementController {
 		return ResponseEntity.ok(service.getAllHospitals());
 	}
 
-	@GetMapping("/{id}")
+	@GetMapping("/{id:\\d+}")
 	@Operation(summary = "Get hospital by ID")
 	public ResponseEntity<HospitalEntity> getHospitalById(@PathVariable Long id) {
 		return ResponseEntity.ok(service.getHospitalById(id));
 	}
 
-	@PutMapping("/{id}")
+	@PutMapping("/{id:\\d+}")
 	@Operation(summary = "Update hospital")
 	public ResponseEntity<HospitalEntity> updateHospital(@PathVariable Long id,
 			@Valid @RequestBody HospitalEntity data) {
 		return ResponseEntity.ok(service.updateHospital(id, data));
 	}
 
-	@DeleteMapping("/{id}")
+	@DeleteMapping("/{id:\\d+}")
 	@Operation(summary = "Delete hospital (soft delete)")
 	public ResponseEntity<Void> deleteHospital(@PathVariable Long id) {
 		service.deleteHospital(id);
@@ -200,17 +200,22 @@ public class HospitalManagementController {
 		return ResponseEntity.ok(service.getWardsByHospital(hospitalId));
 	}
 
-	@GetMapping("/ward/{id}")
+	@GetMapping("/ward/{id:\\d+}")
 	public ResponseEntity<WardEntity> getWardById(@PathVariable Long id) {
 		return ResponseEntity.ok(service.getWardById(id));
 	}
 
-	@PutMapping("/ward/{id}")
+	@GetMapping("/ward/beds")
+	public ResponseEntity<List<BedEntity>> getWardBeds() {
+		return ResponseEntity.ok(service.getAllBeds());
+	}
+
+	@PutMapping("/ward/{id:\\d+}")
 	public ResponseEntity<WardEntity> updateWard(@PathVariable Long id, @Valid @RequestBody WardEntity data) {
 		return ResponseEntity.ok(service.updateWard(id, data));
 	}
 
-	@DeleteMapping("/ward/{id}")
+	@DeleteMapping("/ward/{id:\\d+}")
 	public ResponseEntity<Void> deleteWard(@PathVariable Long id) {
 		service.deleteWard(id);
 		return ResponseEntity.noContent().build();
@@ -222,7 +227,7 @@ public class HospitalManagementController {
 		return ResponseEntity.ok(service.getAllWards());
 	}
 
-	@GetMapping("/bed/list")
+	@GetMapping({"/bed/list", "/beds"})
 	@Operation(summary = "Get all beds")
 	public ResponseEntity<List<BedEntity>> getAllBeds() {
 		return ResponseEntity.ok(service.getAllBeds());
@@ -419,17 +424,17 @@ public class HospitalManagementController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(service.addMedicine(data));
 	}
 
-	@GetMapping("/pharmacy/medicine/list")
+	@GetMapping({"/pharmacy/medicine/list", "/pharmacy/medicines"})
 	public ResponseEntity<List<MedicineInventoryEntity>> getAllMedicines() {
 		return ResponseEntity.ok(service.getAllMedicines());
 	}
 
-	@GetMapping("/pharmacy/medicine/{id}")
+	@GetMapping("/pharmacy/medicine/{id:\\d+}")
 	public ResponseEntity<MedicineInventoryEntity> getMedicineById(@PathVariable Long id) {
 		return ResponseEntity.ok(service.getMedicineById(id));
 	}
 
-	@PutMapping("/pharmacy/medicine/{id}")
+	@PutMapping("/pharmacy/medicine/{id:\\d+}")
 	public ResponseEntity<MedicineInventoryEntity> updateMedicine(@PathVariable Long id,
 			@Valid @RequestBody MedicineInventoryEntity data) {
 		return ResponseEntity.ok(service.updateMedicine(id, data));
@@ -465,12 +470,12 @@ public class HospitalManagementController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(service.generateInvoice(data));
 	}
 
-	@GetMapping("/billing/list")
+	@GetMapping({"/billing/list", "/billing/invoices", "/invoices"})
 	public ResponseEntity<List<HospitalInvoiceEntity>> getAllInvoices() {
 		return ResponseEntity.ok(service.getAllInvoices());
 	}
 
-	@GetMapping("/billing/{id}")
+	@GetMapping("/billing/{id:\\d+}")
 	public ResponseEntity<HospitalInvoiceEntity> getInvoiceById(@PathVariable Long id) {
 		return ResponseEntity.ok(service.getInvoiceById(id));
 	}
@@ -480,7 +485,7 @@ public class HospitalManagementController {
 		return ResponseEntity.ok(service.getInvoicesByPatient(patientId));
 	}
 
-	@PutMapping("/billing/{id}")
+	@PutMapping("/billing/{id:\\d+}")
 	public ResponseEntity<HospitalInvoiceEntity> updateInvoice(@PathVariable Long id,
 			@RequestBody HospitalInvoiceEntity data) {
 		return ResponseEntity.ok(service.updateInvoice(id, data));

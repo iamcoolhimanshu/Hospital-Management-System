@@ -54,6 +54,7 @@ import codewithhimanshu.hospital.repository.PatientRepository;
 import codewithhimanshu.hospital.repository.PrescriptionRepository;
 import codewithhimanshu.hospital.repository.RefundRepository;
 import codewithhimanshu.hospital.repository.WardRepository;
+import codewithhimanshu.workflow.event.WorkflowEventPublisher;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
@@ -89,6 +90,7 @@ public class HospitalManagementService {
 	private final AdvancePaymentRepository advanceRepo;
 	private final InvoiceItemRepository invoiceItemRepo;
 	private final RefundRepository refundRepo;
+	private final WorkflowEventPublisher workflowEventPublisher;
 
 	private Long getAccountId() {
 		return appUserService.getLoggedInUserAccountId();
@@ -539,6 +541,11 @@ public class HospitalManagementService {
 
 		auditLog("ADMISSION", "CREATE", "IpdAdmission", String.valueOf(saved.getAdmissionId()),
 				"Patient " + patient.getPatientName() + " admitted");
+		try {
+			workflowEventPublisher.publishEvent("PATIENT_ADMITTED", String.valueOf(saved.getAdmissionId()), "ADMISSION", Map.of("patientId", saved.getPatientId(), "doctorId", saved.getDoctorId(), "bedId", saved.getBedId()));
+		} catch (Exception e) {
+			log.warn("Could not fire PATIENT_ADMITTED event: {}", e.getMessage());
+		}
 		return saved;
 	}
 
@@ -613,6 +620,11 @@ public class HospitalManagementService {
 
 		auditLog("DISCHARGE", "CREATE", "DischargeSummary", String.valueOf(saved.getDischargeId()),
 				"Patient discharged from admission: " + data.getAdmissionId());
+		try {
+			workflowEventPublisher.publishEvent("PATIENT_DISCHARGED", String.valueOf(saved.getDischargeId()), "DISCHARGE", Map.of("admissionId", data.getAdmissionId()));
+		} catch (Exception e) {
+			log.warn("Could not fire PATIENT_DISCHARGED event: {}", e.getMessage());
+		}
 		return saved;
 	}
 

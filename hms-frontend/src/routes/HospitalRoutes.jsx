@@ -4,6 +4,7 @@ import HospitalManagement, { CrudTab, TAB_CONFIG_MAP } from "../pages/HospitalMa
 import DashboardPage from "../pages/HospitalManagement/Dashboard";
 import AppointmentManagement from "../pages/HospitalManagement/appointment/AppointmentManagement";
 import CommunicationDashboard from "../pages/communication/CommunicationDashboard";
+import WorkflowDashboard from "../pages/HospitalManagement/workflow/WorkflowDashboard";
 
 function LoadingScreen() {
   return (
@@ -34,6 +35,15 @@ export default function HospitalRoutes() {
     return (
       <Suspense fallback={<LoadingScreen />}>
         <DashboardPage />
+      </Suspense>
+    );
+  }
+
+  // workflow → Smart Automation & Workflow Engine
+  if (tab === "workflow") {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <WorkflowDashboard />
       </Suspense>
     );
   }

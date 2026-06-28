@@ -4,6 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 
 const NAV = [
   { key: "dashboard", icon: "📊", label: "Dashboard" },
+  { key: "workflow", icon: "⚡", label: "Automation Engine" },
   { key: "appointment", icon: "📅", label: "Appointments" },
   { key: "communication", icon: "💬", label: "Communication Hub" },
   { key: "hospitals", icon: "🏥", label: "Hospitals" },
@@ -30,18 +31,16 @@ const NAV = [
 ];
 
 const SECTIONS = [
-  { label: "Overview", keys: ["dashboard", "appointment", "communication"] },
+  { label: "Overview", keys: ["dashboard", "workflow", "appointment", "communication"] },
   { label: "Hospital", keys: ["hospitals", "departments", "staff", "doctors"] },
   { label: "Patients", keys: ["patients", "wards", "ipd", "opd", "prescription", "lab", "pharmacy", "emergency", "ot", "nursing", "discharge"] },
   { label: "Finance", keys: ["billing", "insurance", "advancepay"] },
   { label: "More", keys: ["relationship", "reports", "admin"] },
 ];
 
-// ── Role → allowed menu keys ───────────────────────────────────
-// ROLE_ADMIN / ROLE_HOSPITAL_ADMIN → everything
 const ROLE_MENUS = {
-  ROLE_ADMIN: null,           // null = no restriction, show all
-  ROLE_HOSPITAL_ADMIN: null,  // full access
+  ROLE_ADMIN: null,
+  ROLE_HOSPITAL_ADMIN: null,
 
   ROLE_DOCTOR: [
     "dashboard",

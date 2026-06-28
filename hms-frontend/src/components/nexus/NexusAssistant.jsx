@@ -678,10 +678,20 @@ function useParticles(canvasRef, active, isDark) {
 }
 
 // ── Main Component ────────────────────────────────────────────────
-export default function NexusAssistant() {
+export default function NexusAssistant({ isOpen: externalIsOpen, onClose: externalOnClose, hideTrigger = false }) {
   const { isDark } = useTheme();
 
-  const [open,      setOpen]      = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = typeof externalIsOpen !== "undefined";
+  const open = isControlled ? externalIsOpen : internalOpen;
+  const setOpen = (val) => {
+    if (isControlled) {
+      if (!val && externalOnClose) externalOnClose();
+    } else {
+      setInternalOpen(val);
+    }
+  };
+
   const [closing,   setClosing]   = useState(false);
   const [messages,  setMessages]  = useState([]);
   const [input,     setInput]     = useState("");
@@ -792,38 +802,40 @@ export default function NexusAssistant() {
       <style>{NEXUS_CSS}</style>
 
       {/* ── Floating trigger pill ── */}
-      <div
-        className="nx-trigger-wrap"
-        onClick={open ? handleClose : handleOpen}
-        title={open ? "Close Nexus" : "Ask Nexus AI"}
-        role="button"
-        aria-label="Open Nexus AI Assistant"
-        tabIndex={0}
-        onKeyDown={e => e.key === "Enter" && (open ? handleClose() : handleOpen())}
-      >
-        <button className="nx-trigger">
-          <span className={`nx-trigger-sparkle${open ? " open" : ""}`}>
-            {open ? (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round"
-                stroke="currentColor">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            ) : (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5L12 2Z"
-                  fill="currentColor" opacity="0.9"/>
-                <path d="M19 2L19.8 4.2L22 5L19.8 5.8L19 8L18.2 5.8L16 5L18.2 4.2L19 2Z"
-                  fill="currentColor" opacity="0.7"/>
-                <path d="M5 16L5.6 17.4L7 18L5.6 18.6L5 20L4.4 18.6L3 18L4.4 17.4L5 16Z"
-                  fill="currentColor" opacity="0.6"/>
-              </svg>
-            )}
-          </span>
-          <span className={`nx-trigger-label${open ? " open" : ""}`}>
-            {open ? "Close" : "AI"}
-          </span>
-        </button>
-      </div>
+      {!hideTrigger && (
+        <div
+          className="nx-trigger-wrap"
+          onClick={open ? handleClose : handleOpen}
+          title={open ? "Close Nexus" : "Ask Nexus AI"}
+          role="button"
+          aria-label="Open Nexus AI Assistant"
+          tabIndex={0}
+          onKeyDown={e => e.key === "Enter" && (open ? handleClose() : handleOpen())}
+        >
+          <button className="nx-trigger">
+            <span className={`nx-trigger-sparkle${open ? " open" : ""}`}>
+              {open ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round"
+                  stroke="currentColor">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              ) : (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5L12 2Z"
+                    fill="currentColor" opacity="0.9"/>
+                  <path d="M19 2L19.8 4.2L22 5L19.8 5.8L19 8L18.2 5.8L16 5L18.2 4.2L19 2Z"
+                    fill="currentColor" opacity="0.7"/>
+                  <path d="M5 16L5.6 17.4L7 18L5.6 18.6L5 20L4.4 18.6L3 18L4.4 17.4L5 16Z"
+                    fill="currentColor" opacity="0.6"/>
+                </svg>
+              )}
+            </span>
+            <span className={`nx-trigger-label${open ? " open" : ""}`}>
+              {open ? "Close" : "AI"}
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* ── Chat panel ── */}
       {open && (
