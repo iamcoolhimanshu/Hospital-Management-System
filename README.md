@@ -419,10 +419,6 @@ This project is licensed under the MIT License.
 </div>
 
 
-IMAGES - 
-
-<img width="1901" height="1009" alt="Screenshot 2026-06-06 224902" src="https://github.com/user-attachments/assets/d76cf377-b517-4a25-bd02-ba2df3928c66" />
-
 
 
 
