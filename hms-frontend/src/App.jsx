@@ -7,6 +7,7 @@ import AppLayout from "./components/layout/AppLayout";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import HospitalRoutes from "./routes/HospitalRoutes";
+import PublicFormRenderer from "./pages/HospitalManagement/forms/PublicFormRenderer";
 
 function RootRedirect() {
   const { token } = useAuth();
@@ -21,6 +22,7 @@ export default function App() {
           <Routes>
             <Route path="/login"    element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/public/form/:id" element={<PublicFormRenderer />} />
             <Route
               path="/hospital"
               element={

@@ -27,6 +27,7 @@ const NAV = [
   { key: "advancepay", icon: "💳", label: "Advance Payment" },
   { key: "relationship", icon: "🤝", label: "Relationships" },
   { key: "reports", icon: "📈", label: "Reports" },
+  { key: "forms", icon: "📋", label: "Dynamic Forms" },
   { key: "admin", icon: "⚙️", label: "Admin" },
 ];
 
@@ -35,7 +36,7 @@ const SECTIONS = [
   { label: "Hospital", keys: ["hospitals", "departments", "staff", "doctors"] },
   { label: "Patients", keys: ["patients", "wards", "ipd", "opd", "prescription", "lab", "pharmacy", "emergency", "ot", "nursing", "discharge"] },
   { label: "Finance", keys: ["billing", "insurance", "advancepay"] },
-  { label: "More", keys: ["relationship", "reports", "admin"] },
+  { label: "More", keys: ["relationship", "reports", "forms", "admin"] },
 ];
 
 const ROLE_MENUS = {

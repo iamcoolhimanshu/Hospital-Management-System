@@ -5,6 +5,7 @@ import DashboardPage from "../pages/HospitalManagement/Dashboard";
 import AppointmentManagement from "../pages/HospitalManagement/appointment/AppointmentManagement";
 import CommunicationDashboard from "../pages/communication/CommunicationDashboard";
 import WorkflowDashboard from "../pages/HospitalManagement/workflow/WorkflowDashboard";
+import DynamicFormBuilderDashboard from "../pages/HospitalManagement/forms/DynamicFormBuilderDashboard";
 
 function LoadingScreen() {
   return (
@@ -62,6 +63,15 @@ export default function HospitalRoutes() {
     return (
       <Suspense fallback={<LoadingScreen />}>
         <CommunicationDashboard />
+      </Suspense>
+    );
+  }
+
+  // forms → Dynamic Form Builder Dashboard
+  if (tab === "forms") {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <DynamicFormBuilderDashboard />
       </Suspense>
     );
   }
