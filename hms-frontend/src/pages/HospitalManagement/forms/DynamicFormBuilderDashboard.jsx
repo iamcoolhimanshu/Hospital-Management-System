@@ -245,13 +245,11 @@ export default function DynamicFormBuilderDashboard() {
       setAiLoading(false);
     }
   };
-
   // KPIs
   const totalCount = forms.length;
-  const publishedCount = forms.filter(f => f.status === "PUBLISHED").count || forms.filter(f => f.status === "PUBLISHED").length;
+  const publishedCount = forms.filter(f => f.status === "PUBLISHED").length;
   const draftCount = forms.filter(f => f.status === "DRAFT").length;
   const archivedCount = forms.filter(f => f.status === "ARCHIVED").length;
-
   if (view === "build") {
     return (
       <DynamicFormBuilder 

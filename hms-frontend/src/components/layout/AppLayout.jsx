@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import { useTheme } from "../../hooks/useTheme";
@@ -8,6 +8,7 @@ import MasterAIDock from "../nexus/MasterAIDock";
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const { isDark } = useTheme();
+  const location = useLocation();
 
   // ── Inject Google Translate widget (hidden) ───────────────────────
   useEffect(() => {
@@ -95,8 +96,8 @@ export default function AppLayout() {
         <Outlet />
       </main>
 
-      {/* ── Unified Master AI Floating Control Center ── */}
-      <MasterAIDock />
+      {/* ── Unified Master AI Floating Control Center (Only on Dashboard) ── */}
+      {/^\/hospital\/dashboard\/?$/.test(location.pathname) && <MasterAIDock />}
 
       {/* Hidden Google Translate widget container (required by the script) */}
       <div id="google_translate_element" style={{ display: "none" }} />
