@@ -4,6 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 
 const NAV = [
   { key: "dashboard", icon: "📊", label: "Dashboard" },
+  { key: "analytics", icon: "📐", label: "Analytics Studio" },
   { key: "workflow", icon: "⚡", label: "Automation Engine" },
   { key: "appointment", icon: "📅", label: "Appointments" },
   { key: "communication", icon: "💬", label: "Communication Hub" },
@@ -32,7 +33,7 @@ const NAV = [
 ];
 
 const SECTIONS = [
-  { label: "Overview", keys: ["dashboard", "workflow", "appointment", "communication"] },
+  { label: "Overview", keys: ["dashboard", "analytics", "workflow", "appointment", "communication"] },
   { label: "Hospital", keys: ["hospitals", "departments", "staff", "doctors"] },
   { label: "Patients", keys: ["patients", "wards", "ipd", "opd", "prescription", "lab", "pharmacy", "emergency", "ot", "nursing", "discharge"] },
   { label: "Finance", keys: ["billing", "insurance", "advancepay"] },

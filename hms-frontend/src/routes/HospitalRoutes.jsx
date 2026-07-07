@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, lazy } from "react";
 import { useParams } from "react-router-dom";
 import HospitalManagement, { CrudTab, TAB_CONFIG_MAP } from "../pages/HospitalManagement/Hospitalmanagement";
 import DashboardPage from "../pages/HospitalManagement/Dashboard";
@@ -6,6 +6,10 @@ import AppointmentManagement from "../pages/HospitalManagement/appointment/Appoi
 import CommunicationDashboard from "../pages/communication/CommunicationDashboard";
 import WorkflowDashboard from "../pages/HospitalManagement/workflow/WorkflowDashboard";
 import DynamicFormBuilderDashboard from "../pages/HospitalManagement/forms/DynamicFormBuilderDashboard";
+
+const AnalyticsStudio = lazy(() => import("../pages/HospitalManagement/AnalyticsStudio"));
+const DashboardBuilder = lazy(() => import("../pages/HospitalManagement/DashboardBuilder"));
+const DashboardRenderer = lazy(() => import("../pages/HospitalManagement/DashboardRenderer"));
 
 function LoadingScreen() {
   return (
@@ -30,6 +34,35 @@ function LoadingScreen() {
 
 export default function HospitalRoutes() {
   const { tab } = useParams();
+
+  // analytics → custom analytics dashboards and builder
+  if (tab === "analytics") {
+    const pathParts = window.location.pathname.split("/hospital/analytics/")[1];
+    if (pathParts) {
+      const parts = pathParts.split("/");
+      const action = parts[0];
+      const id = parts[1];
+      if (action === "create" || action === "edit") {
+        return (
+          <Suspense fallback={<LoadingScreen />}>
+            <DashboardBuilder dashboardId={id} />
+          </Suspense>
+        );
+      }
+      if (action === "view") {
+        return (
+          <Suspense fallback={<LoadingScreen />}>
+            <DashboardRenderer dashboardId={id} />
+          </Suspense>
+        );
+      }
+    }
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <AnalyticsStudio />
+      </Suspense>
+    );
+  }
 
   // dashboard → dedicated Dashboard page
   if (tab === "dashboard") {
