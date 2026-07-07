@@ -1,7 +1,7 @@
 services:
   - type: web
     name: hospital-management-system
-    runtime: java
+    env: java
     rootDir: hms/hms
 
     buildCommand: ./mvnw clean package -DskipTests
